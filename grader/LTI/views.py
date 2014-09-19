@@ -4,8 +4,9 @@ from django.template import RequestContext
 from django.shortcuts import get_object_or_404, render_to_response
 from ims_lti_py.tool_provider import DjangoToolProvider
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+import re
 
 from django.conf import settings 
 from utils import *
@@ -60,7 +61,7 @@ def launch_lti(request):
         raise PermissionDenied()
     
     """ GET OR CREATE NEW USER AND LTI_PROFILE """
-    lti_username = '%s:user_%s' % (email, user_id) #create username with consumer_key and user_id
+    lti_username = '%s:user_%s' % (email, user_id) #create username with email and user_id
     try:
         """ Check if user already exists using email, if not create new """    
         user = User.objects.get(email=email)
@@ -80,13 +81,11 @@ def launch_lti(request):
         the user with the lti_username does not exist """    
         user = get_object_or_404(User, username=lti_username)
 
-    """Poista kommentit, jos toteutetaan jotain admin-toiminnallisuutta"""
-    """ If person has an instructor role, let's make he/she an admin
+    #If person has an instructor role, let's make he/she an admin
     if 'Instructor' in roles and user.is_superuser == False:
         user.is_superuser = True
         user.is_staff = True
         user.save()
-    """
 
     """ Save extra info to custom profile model (add/remove fields in models.py)
     lti_userprofile = get_object_or_404(LTIProfile, user=user)
@@ -101,5 +100,9 @@ def launch_lti(request):
     request.session['assignment'] = assignment
     request.session['outcome'] = outcome_url
 
-    return HttpResponseRedirect('/grade/')
+    #Strip whitespaces and go lowercase for the sake of prettiness on URL
+    pattern = re.compile(r'\s+')
+    course = re.sub(pattern, '', course.lower())
+    assignment = re.sub(pattern, '', assignment.lower())
+    return HttpResponseRedirect('/grade/' + course + '/' + assignment)
     

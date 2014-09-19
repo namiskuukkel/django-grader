@@ -1,7 +1,7 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 import views
 
 urlpatterns = patterns('',
-    # ex: /polls/
-    url(r'^$', views.grade, name='grade'),
+    url(r'(?P<course_name>.+)/(?P<assignment_name>.+)/$', views.grade, name='grade'),
+    #url(r'^$')
 )

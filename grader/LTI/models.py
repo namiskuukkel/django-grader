@@ -7,9 +7,7 @@ class LTIProfile(models.Model):
     """User profile model. This profile can be retrieved by calling
     get_profile() on the User model
     """
-    
     user = models.OneToOneField(User, null=True)
-    roles = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Roles"))
     
     @models.permalink
     def get_absolute_url(self):

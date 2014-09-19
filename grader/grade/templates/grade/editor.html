@@ -5,6 +5,8 @@
     {{ form.media }}
 </head>
 <body>
+    <p>boo!</p>
+    {{user}}
     <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}

@@ -7,7 +7,7 @@ class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
         widgets = {
-            "text": AceWidget(theme='twilight'),
+            "text": AceWidget(mode='python',theme='twilight'),
         }
 
     def clean_text(self):

@@ -5,7 +5,7 @@ from django.conf.urls import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^uocLTI/', include('uocLTI.urls')),
+    url(r'^lti/', include('LTI.urls')),
     url(r'^grade/', include('grade.urls')),
     # Examples:
     # url(r'^$', 'grader.views.home', name='home'),
