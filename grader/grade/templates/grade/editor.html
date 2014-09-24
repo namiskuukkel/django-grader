@@ -1,12 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>An simple example with django-ace</title>
+    <title>{{course}}</title>
     {{ form.media }}
 </head>
 <body>
-    <p>boo!</p>
-    {{user}}
+    {% if assignment.open_from and now < assignment.open_from %}
+    <p>This exercise isn't open yet!</p>
+    {% elif assignment.open_till and now >= assignment.open_till %}
+    <p>This exercise has closed!</p>
+    {% endif %}
+
+    {% if attempts_left == 0 %}
+    <p>Olet käyttänyt kaikki yrityskertasi! </p>
+    {% endif %}
+
+    <h1>{{assignment.name}}</h1>
+    <p>{{assignment.description}}</p>
+
+    {% if attempts_left == 1 %}
+    <p>Sinulla on vain YKSI yrityskerta jäljellä! </p>
+    {% elif attempts_left != 9999 %}
+    <p>Sinulla on {{attempts_left}} yrityskertaa jäljellä </p>
+    {% else %}
+    <!-- Much attempts. Over 9000. Wow. -->
+    {% endif %}
     <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
