@@ -7,10 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 #from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 import re
-
 from django.conf import settings 
 from utils import *
-from models import *
+from django.contrib.auth.models import User
 
 @csrf_exempt
 def launch_lti(request):

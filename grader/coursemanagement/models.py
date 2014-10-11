@@ -1,5 +1,5 @@
 from django.db import models
-from LTI.models import LTIProfile
+from django.contrib.auth.models import User
 
 class Course(models.Model):
     id = models.CharField(max_length=30, primary_key=True)
@@ -21,5 +21,5 @@ class Assignment(models.Model):
     open_till = models.DateTimeField(blank=True)
 
 class UserAttempts(models.Model):
-    user = models.ForeignKey(LTIProfile)
+    user = models.ForeignKey(User)
     attempts = models.SmallIntegerField()

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from course_management.models import *
+from coursemanagement.models import *
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
@@ -8,10 +8,10 @@ import requests
 from django.contrib.auth.decorators import login_required
 import json
 
-@login_required
+#@login_required
 def add_course(request):
 
-    if not request.user.is_superuser():
+    if not request.user.is_superuser:
         return PermissionDenied()
 
     if request.method == 'POST':
@@ -22,6 +22,8 @@ def add_course(request):
             return HttpResponse("No contact email provided!")
 
         response = requests.get('https://canvas.instructure.com/api/v1/courses/' + id)
+        return HttpResponse(response)
+
         data = json.loads(response)
         course = data['name']
         to_add = Course()
@@ -32,7 +34,7 @@ def add_course(request):
     else:
         course = None
 
-    return render(request, "course_management/add_course.html", {
+    return render(request, "coursemanagement/course.html", {
         "user": request.user,
         "course": course,
     })

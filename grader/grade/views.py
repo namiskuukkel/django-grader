@@ -1,19 +1,19 @@
 from .forms import SnippetForm
 from .models import Snippet
-from course_management.models import *
+from coursemanagement.models import *
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 
-@login_required
+#@login_required
 def grade(request, course_name, assignment_name):
 
     if not 'course_id' in request.session or not 'outcome' in request.session:
         return HttpResponse("Missing parameters")
 
-    assignment = Assignment.objects.get(name = assignment_name, course__id = request.session['course_id'])
+    assignment = Assignment.objects.get(name = assignment_name)
 
     if assignment.count == 0:
         return HttpResponse("No assignment found!")
