@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Course Addition</title>
+    <title>Assignment Addition</title>
+    {{ form.media }}
 </head>
 <body>
 
-    <h1>Add A New Course</h1>
-    <p> Type the ID of your course as it appears on your courses Canvas URL</p>
+    <h1>Add A New Assignment</h1>
     <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}

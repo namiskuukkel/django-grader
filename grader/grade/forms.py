@@ -3,15 +3,11 @@ from django import forms
 from django_ace import AceWidget
 
 
-class SnippetForm(forms.ModelForm):
-    class Meta:
-        model = Snippet
-        widgets = {
-            "text": AceWidget(mode='python',theme='twilight'),
-        }
+class EditorForm(forms.Form):
+    text = forms.CharField(widget=AceWidget(mode='python', theme='monokai'))
 
     def clean_text(self):
         value = self.cleaned_data["text"]
-        if not "valid" in value:
-            raise forms.ValidationError("Must contain the string 'valid'")
+        '''d" in value:
+            raise forms.ValidationError("Must contain the string 'valid'")'''
         return value

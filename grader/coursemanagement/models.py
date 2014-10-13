@@ -19,6 +19,7 @@ class Assignment(models.Model):
     description = models.TextField(editable=False)
     open_from = models.DateTimeField(blank=True)
     open_till = models.DateTimeField(blank=True)
+    execution_timeout = models.PositiveIntegerField(default=15)
 
 class UserAttempts(models.Model):
     user = models.ForeignKey(User)

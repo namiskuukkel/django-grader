@@ -7,15 +7,20 @@ from django.http import HttpResponse
 import requests
 from django.contrib.auth.decorators import login_required
 import json
+from .forms import *
 
 #@login_required
 def add_course(request):
 
-    if not request.user.is_superuser:
-        return PermissionDenied()
+    #if not request.user.is_superuser:
+     #   return PermissionDenied()
 
     if request.method == 'POST':
-        id = request.POST['course_id']
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            form.save()
+        return HttpResponse("Success!")
+        '''id = request.POST['course_id']
         if not id:
             return HttpResponse("No course id provided!")
         elif not request.POST['email']:
@@ -30,11 +35,32 @@ def add_course(request):
         to_add.id = id
         to_add.name = course
         to_add.contact = request.POST['email']
-        return redirect('/')
+        return redirect('/')'''
     else:
         course = None
+        form = CourseForm()
 
     return render(request, "coursemanagement/course.html", {
+        "form": form,
         "user": request.user,
         "course": course,
+    })
+
+#@login_required
+def add_assignment(request):
+    #if not request.user.is_superuser:
+     #   return PermissionDenied()
+
+    if request.method == 'POST':
+        form = AssignmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+        return HttpResponse("Success!")
+
+    else:
+        form = AssignmentForm()
+
+    return render(request, "coursemanagement/assignment.html", {
+        "form": form,
+        "user": request.user,
     })
