@@ -1,6 +1,7 @@
-from django.contrib.auth import login
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from django.http import HttpResponseRedirect
-from django.template import RequestContext
 from django.shortcuts import get_object_or_404, render_to_response
 from ims_lti_py.tool_provider import DjangoToolProvider
 from django.views.decorators.csrf import csrf_exempt
@@ -50,7 +51,7 @@ def launch_lti(request):
     email = get_lti_value(settings.LTI_EMAIL, tool_provider, encoding=encoding)
     roles = get_lti_value(settings.LTI_ROLES, tool_provider, encoding=encoding)
     user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
-    course_id= get_lti_value('course_label', tool_provider, encoding=encoding)
+    course_id= get_lti_value('course_id', tool_provider, encoding=encoding)
     course_name = get_lti_value('context_title', tool_provider, encoding=encoding)
     assignment = get_lti_value('resource_link_title', tool_provider, encoding=encoding)
     outcome_url = get_lti_value(settings.LTI_OUTCOME, tool_provider, encoding=encoding)

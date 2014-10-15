@@ -6,12 +6,13 @@
 <body>
 
     <h1>Add A New Course</h1>
-    <p> Type the ID of your course as it appears on your courses Canvas URL</p>
     <form action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit"/>
     </form>
 
+    <p> If you don't set Use Gitlab, the Student Code Base Directory and the Assignment Base Directory have to be set
+    and should also exist on the server's filesystem. The directory path provided has to be <b>absolute</b>.
 </body>
 </html>

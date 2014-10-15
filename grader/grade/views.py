@@ -131,6 +131,7 @@ def save(course_name, assignment_name, username, code):
             f.close()
         else:
             #TODO
+            #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
             print("stuff")
     except:
         return HttpResponse("")

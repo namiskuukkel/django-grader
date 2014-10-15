@@ -1,14 +1,16 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from django.forms import ModelForm
 from .models import Assignment, Course
 
 class CourseForm(ModelForm):
-    fields = ['id', 'name', 'contact']
     class Meta:
         model = Course
-
+        fields = '__all__'
 
 class AssignmentForm(ModelForm):
-    fields = ['name', 'course', 'attempts', 'description', 'open_from', 'open_till', 'execution_timeout']
     class Meta:
         model = Assignment
+        fields = '__all__'
 

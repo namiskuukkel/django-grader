@@ -1,15 +1,18 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from django.db import models
 from django.contrib.auth.models import User
 import os
 
 class Course(models.Model):
-    id = models.CharField(max_length=30, primary_key=True)
+    id = models.CharField(max_length=30, primary_key=True, help_text="ID löytyy kurssin Canvaksen URL:sta")
     name = models.CharField(max_length=100)
     #Contact persons email for the case of emergengy
     contact = models.EmailField()
     #Settings
-    student_code_dir = models.FilePathField(allow_folders=True, allow_files=False)
-    assignment_base_dir = models.FilePathField(allow_folders=True, allow_files=False)
+    student_code_dir = models.CharField(blank=True, max_length=300, verbose_name="Student Code Base Directory")
+    assignment_base_dir = models.CharField(blank=True, max_length=300, verbose_name="Assignment Base Directory")
     use_gitlab = models.BooleanField(default=False)
 
     def __str__(self):
