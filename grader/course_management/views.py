@@ -1,6 +1,9 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from django.shortcuts import render
 
-from coursemanagement.models import *
+from course_management.models import *
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
@@ -8,6 +11,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 import json
 from .forms import *
+import re
 
 #@login_required
 def add_course(request):
@@ -20,6 +24,7 @@ def add_course(request):
         if form.is_valid():
             form.save()
         return HttpResponse("Success!")
+        #Fetch from Canvas version
         '''id = request.POST['course_id']
         if not id:
             return HttpResponse("No course id provided!")
@@ -40,7 +45,7 @@ def add_course(request):
         course = None
         form = CourseForm()
 
-    return render(request, "coursemanagement/course.html", {
+    return render(request, "course_management/course.html", {
         "form": form,
         "user": request.user,
         "course": course,
@@ -60,7 +65,7 @@ def add_assignment(request):
     else:
         form = AssignmentForm()
 
-    return render(request, "coursemanagement/assignment.html", {
+    return render(request, "course_management/assignment.html", {
         "form": form,
         "user": request.user,
     })

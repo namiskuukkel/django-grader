@@ -3,6 +3,16 @@
 <head>
     <title>{{course}}</title>
     {{ form.media }}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script>
+        function run() {
+            $('#code_area').attr('action', "/grade/"{{course}}"/"{{assignment.name}}+"/").submit();
+        }
+        function grade() {
+            $('#code_area').attr('action', "grade/").submit();
+        }
+
+    </script>
 </head>
 <body>
     {% if assignment.open_from and now < assignment.open_from %}
@@ -25,15 +35,15 @@
     {% else %}
     <!-- Much attempts. Over 9000. Wow. -->
     {% endif %}
-    <form action="" method="post">
+    <p>hep</p>
+    {{message}}
+    <form id="code_area" action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit"/>
+    <input type="submit" value="Tsadam"/>
     </form>
+    <button type="button" onclick="run()">Aja</button>
+    <button type="button" onclick="grade()">Testaa arvostelijalla</button>
 
-    {% for snippet in snippets %}
-    <hr/>
-    <pre>{{ snippet.text }}</pre>
-    {% endfor %}
 </body>
 </html>

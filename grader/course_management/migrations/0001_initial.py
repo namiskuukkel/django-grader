@@ -51,7 +51,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assignment',
             name='course',
-            field=models.ForeignKey(related_name=b'course', to='coursemanagement.Course'),
+            field=models.ForeignKey(related_name=b'course', to='course_management.Course'),
             preserve_default=True,
         ),
     ]

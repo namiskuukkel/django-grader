@@ -2,6 +2,6 @@ from django.conf.urls import patterns, url
 import views
 
 urlpatterns = patterns('',
-    url(r'(?P<course_name>.+)/(?P<assignment_name>.+)/$', views.grade, name='grade'),
-    #url(r'^$')
+    url(r'/grade/$', views.grade, name='grade'),
+    url(r'/$', views.code, name='code'),
 )

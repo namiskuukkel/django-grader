@@ -121,7 +121,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_ace',
     'grade',
-    'coursemanagement',
+    'course_management',
     'LTI',
 
     # Uncomment the next line to enable the admin:
