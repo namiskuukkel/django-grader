@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 from .forms import EditorForm
-from course_management.models import *
+from course_management.models import Assignment, Course, UserAttempts
 import course_management.course_settings as course_settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -13,6 +13,35 @@ import subprocess, threading, os
 import logging
 
 logging.basicConfig(filename='Logs/grader.log', level=logging.DEBUG)
+
+def save(course_id, course_name, assignment_name, username, code):
+    try:
+        try:
+            course = Course.objects.get(id = course_id)
+            if course.use_gitlab is False:
+                #Linux
+                #student_dir = course.student_code_dir + '/' + assignment_name + '/' + username
+                #Windows
+                #Note the character constraints on directory and file names!
+                student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
+                if not os.path.exists(student_dir):
+                    try:
+                        os.makedirs(student_dir)
+                    except:
+                        logging.info("Failed to create:" + student_dir)
+                f = open(student_dir + "/to_test.py", 'w')
+                file = File(f)
+                file.write(code)
+                f.close()
+            else:
+                #TODO
+                #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
+                print("stuff")
+        except Course.DoesNotExist:
+            logging.warning('Course not found: ' + assignment_name)
+            return HttpResponse("No course found!")
+    except:
+        return HttpResponse("Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
 
 @login_required
 def code(request):
@@ -38,13 +67,15 @@ def code(request):
     if assignment.attempts > 0:
         try:
             #TODO: match the assignment as well
-            user_attempts = UserAttempts.objects.get(user__name=request.user.username,
-                                                     assignment__name = assignment.name)
+            user_attempts = UserAttempts.objects.get(user__username=request.user.username,
+                                                     assignment__id = assignment.id)
+
         except UserAttempts.DoesNotExist:
             #User is trying this for the first time, create new db object that connects the user object to amount of
             #attempts the user has left to try this assignment
             to_add = UserAttempts()
-            to_add.user = request.user.id
+            to_add.user = request.user
+            to_add.assignment = assignment
             to_add.attempts = assignment.attempts
             attempts_left = assignment.attempts
             to_add.save()
@@ -52,7 +83,7 @@ def code(request):
     if request.method == 'POST':
         form = EditorForm(request.POST)
         if form.is_valid():
-            save(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+            save(request.session['course_id'], course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
@@ -119,19 +150,3 @@ def grade(request):
                      + request.session['assignment_name'] + "/*", code_dir])
     p = subprocess.Popen(['docker', 'run', '--volume', code_dir +':/test', '--net', 'none', '--rm', 'student_test'])
 
-def save(course_name, assignment_name, username, code):
-    try:
-        if course_settings.use_gitlab is False:
-            student_dir = course_settings.student_code_dir + '/' + assignment_name + '/' + username
-            if not os.path.exists(student_dir):
-                os.makedirs(student_dir)
-            f = open(student_dir + "/to_test.py", 'w')
-            file = File(f)
-            file.write(code)
-            f.close()
-        else:
-            #TODO
-            #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
-            print("stuff")
-    except:
-        return HttpResponse("")

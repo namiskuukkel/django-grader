@@ -6,10 +6,10 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script>
         function run() {
-            $('#code_area').attr('action', "/grade/"{{course}}"/"{{assignment.name}}+"/").submit();
+            $('#code_area').attr('action', "/").submit();
         }
         function grade() {
-            $('#code_area').attr('action', "grade/").submit();
+            $('#code_area').attr('action', "/grade/").submit();
         }
 
     </script>
@@ -40,7 +40,6 @@
     <form id="code_area" action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Tsadam"/>
     </form>
     <button type="button" onclick="run()">Aja</button>
     <button type="button" onclick="grade()">Testaa arvostelijalla</button>

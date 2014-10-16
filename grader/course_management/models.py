@@ -3,12 +3,11 @@
 
 from django.db import models
 from django.contrib.auth.models import User
-import os
 
 class Course(models.Model):
-    id = models.CharField(max_length=30, primary_key=True, help_text="ID löytyy kurssin Canvaksen URL:sta")
+    id = models.CharField(max_length=30, primary_key=True, help_text="ID is found on course's Canvas URL")
     name = models.CharField(max_length=100)
-    #Contact persons email for the case of emergengy
+    #Contact person's email for the case of emergengy
     contact = models.EmailField()
     #Settings
     student_code_dir = models.CharField(blank=True, max_length=300, verbose_name="Student Code Base Directory")
@@ -30,6 +29,6 @@ class Assignment(models.Model):
     execution_timeout = models.PositiveIntegerField(default=15)
 
 class UserAttempts(models.Model):
-    user = models.ForeignKey(User)
-    assignment = models.ForeignKey(Assignment)
+    user = models.ForeignKey(User, related_name='user')
+    assignment = models.ForeignKey(Assignment, related_name='assignment')
     attempts = models.SmallIntegerField()

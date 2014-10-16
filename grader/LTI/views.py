@@ -2,13 +2,14 @@
 # -*- coding: UTF-8 -*-
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render_to_response
+from django.shortcuts import get_object_or_404
 from ims_lti_py.tool_provider import DjangoToolProvider
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import PermissionDenied
 from django.conf import settings 
 from utils import *
 from django.contrib.auth.models import User
+from django.contrib.auth import login
 import logging
 
 logging.basicConfig(filename='Logs/lti.log' ,level=logging.DEBUG)
@@ -51,18 +52,17 @@ def launch_lti(request):
     email = get_lti_value(settings.LTI_EMAIL, tool_provider, encoding=encoding)
     roles = get_lti_value(settings.LTI_ROLES, tool_provider, encoding=encoding)
     user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
-    course_id= get_lti_value('course_id', tool_provider, encoding=encoding)
+    course_id= get_lti_value('context_id', tool_provider, encoding=encoding)
     course_name = get_lti_value('context_title', tool_provider, encoding=encoding)
     assignment = get_lti_value('resource_link_title', tool_provider, encoding=encoding)
     outcome_url = get_lti_value(settings.LTI_OUTCOME, tool_provider, encoding=encoding)
 
     if not email or not user_id:
         if settings.LTI_DEBUG: print "Email and/or user_id wasn't found in post"
-        logging.error("Email and/or user_id wasn't found in post")
         raise PermissionDenied()
     
     """ GET OR CREATE NEW USER AND LTI_PROFILE """
-    lti_username = '%s:user_%s' % (email, user_id) #create username with email and user_id
+    lti_username = '%s;user_%s' % (email, user_id) #create username with email and user_id
     try:
         """ Check if user already exists using email, if not create new """    
         user = User.objects.get(email=email)
