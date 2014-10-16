@@ -1,0 +1,11 @@
+python2.7
+Django1.7
+tophatmonocle/ims_lti_py
+  libxml2-dev
+  libxslt-dev
+  python-dev
+  oauth2
+  httplib2
+mysql-server
+Apache2
+mod_wsgi
