@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
 from ims_lti_py.tool_provider import DjangoToolProvider
 from django.views.decorators.csrf import csrf_exempt
@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login
 import logging
 
-logging.basicConfig(filename='Logs/lti.log' ,level=logging.DEBUG)
+logging.basicConfig(filename='Logs/lti.log',level=logging.DEBUG)
 
 @csrf_exempt
 def launch_lti(request):
@@ -51,36 +51,29 @@ def launch_lti(request):
 
     email = get_lti_value(settings.LTI_EMAIL, tool_provider, encoding=encoding)
     roles = get_lti_value(settings.LTI_ROLES, tool_provider, encoding=encoding)
-    user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
+    #user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
     course_id= get_lti_value('context_id', tool_provider, encoding=encoding)
     course_name = get_lti_value('context_title', tool_provider, encoding=encoding)
     assignment = get_lti_value('resource_link_title', tool_provider, encoding=encoding)
     outcome_url = get_lti_value(settings.LTI_OUTCOME, tool_provider, encoding=encoding)
 
-    if not email or not user_id:
-        if settings.LTI_DEBUG: print "Email and/or user_id wasn't found in post"
+    if not email:
+        if settings.LTI_DEBUG: print "Email wasn't found in post"
         raise PermissionDenied()
     
     """ GET OR CREATE NEW USER AND LTI_PROFILE """
-    lti_username = '%s;user_%s' % (email, user_id) #create username with email and user_id
+    lti_username = email #create username with email and user_id
     try:
         """ Check if user already exists using email, if not create new """    
-        user = User.objects.get(email=email)
-        if user.username != lti_username:
-            """ If the username is not in the format user_id, change it and save.  This could happen
-            if there was a previously populated User table. """
-            user.username = lti_username
-            user.save()
+        user = User.objects.get(username=lti_username)
     except User.DoesNotExist:
         """ first time entry, create new user """
         user = User.objects.create_user(lti_username, email)
         user.set_unusable_password()
         user.save()
     except User.MultipleObjectsReturned:
-        """ If the application is not requiring unique emails, multiple users may be returned if there was an existing
-        User table before implementing this app with multiple users for the same email address.  Could add code to merge them, but for now we return 404 if 
-        the user with the lti_username does not exist """    
-        user = get_object_or_404(User, username=lti_username)
+        logging.error("Multiple user objects returned on LTI login")
+        return HttpResponse("Error with database")
 
     #If person has an instructor role, let's make he/she an admin
     if 'Instructor' in roles and user.is_superuser == False:

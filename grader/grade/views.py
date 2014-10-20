@@ -51,8 +51,6 @@ def code(request):
         return HttpResponse("Missing parameters")
 
     #Fetch the object matching the assignment name given by the LTI
-    #TODO: match coursename also!
-    #TODO: make assignment unique
     assignment_name = request.session['assignment_name']
     course_name = request.session['course_name']
 

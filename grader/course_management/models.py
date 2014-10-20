@@ -23,7 +23,7 @@ class Assignment(models.Model):
     course = models.ForeignKey(Course, related_name='course')
     # 0 attempts allowed equals to infinite attempts
     attempts = models.PositiveSmallIntegerField(default=0)
-    description = models.TextField(editable=False)
+    description = models.TextField()
     open_from = models.DateTimeField(blank=True)
     open_till = models.DateTimeField(blank=True)
     execution_timeout = models.PositiveIntegerField(default=15)
