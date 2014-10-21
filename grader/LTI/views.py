@@ -8,11 +8,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import PermissionDenied
 from django.conf import settings 
 from utils import *
-from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 import logging
 
-logging.basicConfig(filename='Logs/lti.log',level=logging.DEBUG)
+logging.basicConfig(filename='/var/log/grader/lti.log',level=logging.DEBUG)
 
 @csrf_exempt
 def launch_lti(request):
@@ -91,3 +91,6 @@ def launch_lti(request):
 
     return HttpResponseRedirect('/')
     
+def login_info(request):
+    return HttpResponse('This webpage must be entered via a LMS')
+	

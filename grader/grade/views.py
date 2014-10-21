@@ -3,7 +3,6 @@
 
 from .forms import EditorForm
 from course_management.models import Assignment, Course, UserAttempts
-import course_management.course_settings as course_settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -12,7 +11,7 @@ from django.core.files import File
 import subprocess, threading, os
 import logging
 
-logging.basicConfig(filename='Logs/grader.log', level=logging.DEBUG)
+logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 def save(course_id, course_name, assignment_name, username, code):
     try:

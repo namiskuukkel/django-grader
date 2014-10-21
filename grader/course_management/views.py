@@ -12,6 +12,9 @@ from django.contrib.auth.decorators import login_required
 import json
 from .forms import *
 import re
+import logging
+
+logging.basicConfig(filename='/var/log/grader/management.log',level=logging.DEBUG)
 
 @login_required
 def manage(request):
