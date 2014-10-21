@@ -25,7 +25,7 @@ def save(course_id, course_name, assignment_name, username, code):
                 #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
                 if not os.path.exists(student_dir):
                     try:
-			os.makedirs(student_dir)
+                        os.makedirs(student_dir)
                     except:
                         logging.info("Failed to create:" + student_dir)
                 f = open(student_dir + "/to_test.py", 'w')
