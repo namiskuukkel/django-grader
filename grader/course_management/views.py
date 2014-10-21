@@ -22,8 +22,8 @@ def manage(request):
         return PermissionDenied()
 
     #TODO: Change the course model to support some kind of user authentication on this listing
-    courses = Course.objects.get()
-    assignments = Assignment.objects.get()
+    courses = Course.objects.all()
+    assignments = Assignment.objects.all()
     return render(request, "course_management/course.html", {
         "courses": courses,
         "assignments": assignments
