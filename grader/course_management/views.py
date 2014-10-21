@@ -3,7 +3,7 @@
 
 from django.shortcuts import render
 
-from course_management.models import *
+from course_management.models import Course, Assignment
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
