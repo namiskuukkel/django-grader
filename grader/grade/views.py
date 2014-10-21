@@ -16,16 +16,16 @@ logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 def save(course_id, course_name, assignment_name, username, code):
     try:
         try:
-            course = Course.objects.get(id = course_id)
+            course = Course.objects.get(name = course_name)
             if course.use_gitlab is False:
                 #Linux
-                #student_dir = course.student_code_dir + '/' + assignment_name + '/' + username
+                student_dir = course.student_code_dir + assignment_name + '/' + username
                 #Windows
                 #Note the character constraints on directory and file names!
-                student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
+                #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
                 if not os.path.exists(student_dir):
                     try:
-                        os.makedirs(student_dir)
+			os.makedirs(student_dir)
                     except:
                         logging.info("Failed to create:" + student_dir)
                 f = open(student_dir + "/to_test.py", 'w')
@@ -37,7 +37,7 @@ def save(course_id, course_name, assignment_name, username, code):
                 #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
                 print("stuff")
         except Course.DoesNotExist:
-            logging.warning('Course not found: ' + assignment_name)
+            logging.warning('Course not found: ' + course_name)
             return HttpResponse("No course found!")
     except:
         return HttpResponse("Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
@@ -54,7 +54,7 @@ def code(request):
     course_name = request.session['course_name']
 
     try:
-        assignment = Assignment.objects.get(name = assignment_name, course__id = request.session['course_id'] )
+        assignment = Assignment.objects.get(name = assignment_name, course__name = request.session['course_name'] )
     except Assignment.DoesNotExist:
         logging.warning('Assignment not found: ' + assignment_name)
         return HttpResponse("No assignment found!")
@@ -80,7 +80,7 @@ def code(request):
     if request.method == 'POST':
         form = EditorForm(request.POST)
         if form.is_valid():
-            save(request.session['course_id'], course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+            save(request.session['course_name'], course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
@@ -96,7 +96,7 @@ def code(request):
                 out = open('result.txt', 'wr')
                 err = open('error.txt', 'wr')
                 def target():
-                    p = subprocess.Popen(['docker', 'run', '--volume', course_settings.student_code_dir + '/'
+                    p = subprocess.Popen(['docker', 'run', '--volume', Course.objects.get(name=course_name).student_code_dir + '/'
                                           + assignment_name + '/' + request.user.username +':/test',
                                           '--net', 'none', '--rm', 'student_run'], stdout=out, stderr=err)
                     #Wait for process to terminate
@@ -124,12 +124,11 @@ def code(request):
             return redirect('/')
     else:
         form = EditorForm()
-        code_file = course_settings.student_code_dir + '/' + assignment_name + '/' + request.user.username+'/to_test.py'
+        code_file =  Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name + '/' + request.user.username+'/to_test.py'
         if os.path.isfile(code_file ):
             f = open(code_file, 'r')
             form.text = f.read()
 
-    #TODO: user attempts!
     return render(request, "grade/editor.html", {
         "form": form,
         "user": request.user,
