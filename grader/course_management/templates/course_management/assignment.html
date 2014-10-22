@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Assignment Addition</title>
     {{ form.media }}
 </head>
@@ -9,7 +10,7 @@
     <h1>Add A New Assignment</h1>
     <form action="" method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ form.course }}
     <input type="submit"/>
     </form>
 

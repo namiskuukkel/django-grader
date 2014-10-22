@@ -17,6 +17,9 @@ class Course(models.Model):
     def __str__(self):
         return str(self.id + ' ' + self.name)
 
+    def __unicode__(self):
+    	return self.name;
+
 class Assignment(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -27,6 +30,12 @@ class Assignment(models.Model):
     open_from = models.DateTimeField(blank=True)
     open_till = models.DateTimeField(blank=True)
     execution_timeout = models.PositiveIntegerField(default=15)
+    
+    class Meta:
+	unique_together = (("name", "course"),)
+
+    def __unicode__(self):
+        return self.name;
 
 class UserAttempts(models.Model):
     user = models.ForeignKey(User, related_name='user')

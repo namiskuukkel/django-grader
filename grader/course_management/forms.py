@@ -1,5 +1,5 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from django.forms import ModelForm
 from .models import Assignment, Course

@@ -38,9 +38,9 @@ def add_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST)
         if form.is_valid():
-            if not form.cleaned_data['student_code_dir'].endswith('/'):
+            if form.cleaned_data['student_code_dir'][:-1] != '/':
                 form.cleaned_data['student_code_dir'] = form.cleaned_data['student_code_dir'] + '/'
-            if not form.cleaned_data['assignment_base_dir'].endswith('/'):
+            if form.cleaned_data['assignment_base_dir'][:-1] != '/':
                 form.cleaned_data['assignment_base_dir'] = form.cleaned_data['assignment_base_dir'] + '/'
             form.save()
             return HttpResponse("Success!")
@@ -82,8 +82,8 @@ def add_assignment(request):
         form = AssignmentForm(request.POST)
         if form.is_valid():
             form.save()
-            assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir + "/"
-            + form.cleaned_data['name']
+	    assignment_name = form.cleaned_data['name'].replace (" ", "_")
+            assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir + "/" + assignment_name
             if not os.path.exists(assignment_path):
                     try:
                         os.makedirs(assignment_path)
