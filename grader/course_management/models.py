@@ -18,24 +18,24 @@ class Course(models.Model):
         return str(self.id + ' ' + self.name)
 
     def __unicode__(self):
-    	return self.name;
+        return self.name;
 
 class Assignment(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, related_name='course')
-    # 0 attempts allowed equals to infinite attempts
-    attempts = models.PositiveSmallIntegerField(default=0)
+    name = models.CharField(max_length=100)
     description = models.TextField()
     open_from = models.DateTimeField(blank=True)
     open_till = models.DateTimeField(blank=True)
+    # 0 attempts allowed equals to infinite attempts
+    attempts = models.PositiveSmallIntegerField(default=0)
     execution_timeout = models.PositiveIntegerField(default=15)
     
     class Meta:
-	unique_together = (("name", "course"),)
+        unique_together = (("name", "course"),)
 
     def __unicode__(self):
-        return self.name;
+        return self.name
 
 class UserAttempts(models.Model):
     user = models.ForeignKey(User, related_name='user')

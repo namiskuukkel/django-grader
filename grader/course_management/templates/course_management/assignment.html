@@ -6,13 +6,11 @@
     {{ form.media }}
 </head>
 <body>
-
     <h1>Add A New Assignment</h1>
     <form action="" method="post">
-    {% csrf_token %}
-    {{ form.course }}
+        {% csrf_token %}
+        {{form.as_p}}
     <input type="submit"/>
     </form>
-
 </body>
 </html>

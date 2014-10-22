@@ -38,12 +38,9 @@ def add_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST)
         if form.is_valid():
-            if form.cleaned_data['student_code_dir'][:-1] != '/':
-                form.cleaned_data['student_code_dir'] = form.cleaned_data['student_code_dir'] + '/'
-            if form.cleaned_data['assignment_base_dir'][:-1] != '/':
-                form.cleaned_data['assignment_base_dir'] = form.cleaned_data['assignment_base_dir'] + '/'
+            form.slash_check()
             form.save()
-            return HttpResponse("Success!")
+            redirect('/manage/')
         else:
             return HttpResponse("Örrr")
         #Fetch from Canvas version
