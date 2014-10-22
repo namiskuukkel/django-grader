@@ -19,7 +19,10 @@ def save(course_id, course_name, assignment_name, username, code):
             course = Course.objects.get(name = course_name)
             if course.use_gitlab is False:
                 #Linux
-                student_dir = course.student_code_dir + assignment_name + '/' + username
+                student_dir = course.student_code_dir
+                if student_dir[:-1] != '/':
+                    student_dir = student_dir + '/'
+                student_dir = student_dir + assignment_name + '/' + username
                 #Windows
                 #Note the character constraints on directory and file names!
                 #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
@@ -141,8 +144,8 @@ def code(request):
 
 @login_required
 def grade(request):
-    code_dir = course_settings.student_code_dir + '/' + request.session['assignment_name'] + '/' + request.user.username
-    subprocess.call(["cp", course_settings.assignment_base_dir + "/"
+    code_dir = Course.objects.get(name=request.session['course_name']).student_code_dir + '/' + request.session['assignment_name'] + '/' + request.user.username
+    subprocess.call(["cp", Course.objects.get(name=request.session['course_name']).assignment_base_dir + "/"
                      + request.session['assignment_name'] + "/*", code_dir])
     p = subprocess.Popen(['docker', 'run', '--volume', code_dir +':/test', '--net', 'none', '--rm', 'student_test'])
 

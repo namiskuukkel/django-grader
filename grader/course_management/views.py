@@ -38,9 +38,8 @@ def add_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST)
         if form.is_valid():
-            form.slash_check()
             form.save()
-            redirect('/manage/')
+            return redirect('/manage/')
         else:
             return HttpResponse("Örrr")
         #Fetch from Canvas version
@@ -79,8 +78,11 @@ def add_assignment(request):
         form = AssignmentForm(request.POST)
         if form.is_valid():
             form.save()
-	    assignment_name = form.cleaned_data['name'].replace (" ", "_")
-            assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir + "/" + assignment_name
+            assignment_name = form.cleaned_data['name'].replace (" ", "_")
+            assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir
+            if assignment_path[:-1] != '/':
+                assignment_path = assignment_path + '/'
+            assignment_path = assignment_path + assignment_name
             if not os.path.exists(assignment_path):
                     try:
                         os.makedirs(assignment_path)
