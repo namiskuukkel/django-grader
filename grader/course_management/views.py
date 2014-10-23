@@ -78,17 +78,17 @@ def add_assignment(request):
         form = AssignmentForm(request.POST)
         if form.is_valid():
             form.save()
+	    logging.info("A_Name" + form.cleaned_data['name'])
             assignment_name = form.cleaned_data['name'].replace (" ", "_")
+            logging.info("A_Name" + assignment_name)
             assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir
             if assignment_path[:-1] != '/':
                 assignment_path = assignment_path + '/'
             assignment_path = assignment_path + assignment_name
             if not os.path.exists(assignment_path):
-                    try:
-                        os.makedirs(assignment_path)
-                    except:
-                        logging.info("Failed to create:" + assignment_path)
-            return HttpResponse("Success!")
+            	os.makedirs(assignment_path)
+                
+            return redirect('/manage')
         else:
             return HttpResponse("Örrr")
 

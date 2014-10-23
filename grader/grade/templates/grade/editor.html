@@ -11,7 +11,6 @@
         function grade() {
             $('#code_area').attr('action', "/grade/").submit();
         }
-
     </script>
 </head>
 <body>
@@ -35,7 +34,6 @@
     {% else %}
     <!-- Much attempts. Over 9000. Wow. -->
     {% endif %}
-    <p>hep</p>
     {{message}}
     <form id="code_area" action="" method="post">
     {% csrf_token %}

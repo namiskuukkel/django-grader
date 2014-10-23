@@ -13,24 +13,27 @@ import logging
 
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
-def save(course_id, course_name, assignment_name, username, code):
+def save(course_name, assignment_name, username, code):
     try:
         try:
             course = Course.objects.get(name = course_name)
             if course.use_gitlab is False:
                 #Linux
                 student_dir = course.student_code_dir
-                if student_dir[:-1] != '/':
+                if not student_dir[-1:] == '/':
                     student_dir = student_dir + '/'
-                student_dir = student_dir + assignment_name + '/' + username
+		    course.student_code_dir = student_dir
+		    course.save()
+                student_dir = student_dir + assignment_name.replace (" ", "_") + '/' + username
                 #Windows
                 #Note the character constraints on directory and file names!
                 #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
-                if not os.path.exists(student_dir):
+                logging.info("attempt:" + student_dir)
+		if not os.path.exists(student_dir):
                     try:
-                        os.makedirs(student_dir)
-                    except:
-                        logging.info("Failed to create:" + student_dir)
+			os.makedirs(student_dir)
+		    except:
+			logging.error("Failed to create: " + student_dir)
                 f = open(student_dir + "/to_test.py", 'w')
                 file = File(f)
                 file.write(code)
@@ -48,7 +51,7 @@ def save(course_id, course_name, assignment_name, username, code):
 @login_required
 def code(request):
     message = ""
-    if not 'course_id' in request.session or not 'outcome' in request.session or not 'course_name' in request.session\
+    if not 'outcome' in request.session or not 'course_name' in request.session\
             or not 'assignment_name' in request.session:
         return HttpResponse("Missing parameters")
 
@@ -67,8 +70,7 @@ def code(request):
     if assignment.attempts > 0:
         try:
             #TODO: match the assignment as well
-            user_attempts = UserAttempts.objects.get(user__username=request.user.username,
-                                                     assignment__id = assignment.id)
+            user_attempts = UserAttempts.objects.get(user__username=request.user.username, assignment__id = assignment.id)
 
         except UserAttempts.DoesNotExist:
             #User is trying this for the first time, create new db object that connects the user object to amount of
@@ -83,24 +85,32 @@ def code(request):
     if request.method == 'POST':
         form = EditorForm(request.POST)
         if form.is_valid():
-            save(request.session['course_name'], course_name, assignment_name, request.user.username, form.cleaned_data['text'])
-
+            save(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+	    form.text = form.cleaned_data['text']
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
             # '-m', '50m', 'student_test', 'to_test.py', 'test'])
 
             try:
-                #Build container
-                p = subprocess.Popen(['docker', 'build', '-t', 'student_run', 'Run-Docker'])
-            except:
-                message="Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
-                pass
+                logging.info("Building container")
+		#Build container
+		out = open('/home/docker/success', 'w')
+                err = open('/home/docker/error', 'w')
+                p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_run', '/home/docker/Run-Docker/'], stdout=out, stderr=err)
+                out.close()
+		err.close()
+	    except:
+                return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
             try:
-                out = open('result.txt', 'wr')
-                err = open('error.txt', 'wr')
-                def target():
-                    p = subprocess.Popen(['docker', 'run', '--volume', Course.objects.get(name=course_name).student_code_dir + '/'
-                                          + assignment_name + '/' + request.user.username +':/test',
+		code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace (" ", "_") + '/' + request.user.username + '/'
+      		logging.info(code_dir)
+		out = open(code_dir + 'result.txt', 'w')
+                err = open(code_dir + 'error.txt', 'w')
+		logging.info(out)
+		logging.info(err)
+		def target():
+		    subprocess.call(["cp", "/home/docker/Run-Docker/run-entrypoint.sh", code_dir])
+                    p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir +':/test',
                                           '--net', 'none', '--rm', 'student_run'], stdout=out, stderr=err)
                     #Wait for process to terminate
                     p.communicate()
@@ -108,7 +118,7 @@ def code(request):
                 thread = threading.Thread(target=target)
                 thread.start()
                 #TODO: Hae asetuksista
-                thread.join(15)
+                thread.join(Assignment.objects.get(name=assignment_name, course__name = course_name).execution_timeout)
                 if thread.is_alive():
                     print 'Terminating process'
                     p.terminate()
