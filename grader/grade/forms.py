@@ -9,7 +9,7 @@ class EditorForm(forms.Form):
 
     def clean_text(self):
         value = self.cleaned_data["text"]
-        forbidden = ['exec(', 'eval(']
+        forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
         for banned in forbidden:
             if banned in value:
                 raise forms.ValidationError("Bannattu!")

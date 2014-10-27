@@ -14,14 +14,15 @@ from .forms import *
 import os
 import logging
 
-logging.basicConfig(filename='/var/log/grader/management.log',level=logging.DEBUG)
+logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
+
 
 @login_required
 def manage(request):
     if not request.user.is_superuser:
         return PermissionDenied()
 
-    #TODO: Change the course model to support some kind of user authentication on this listing
+    # TODO: Change the course model to support some kind of user authentication on this listing
     courses = Course.objects.all()
     assignments = Assignment.objects.all()
     return render(request, "course_management/management.html", {
@@ -29,9 +30,9 @@ def manage(request):
         "assignments": assignments
     })
 
+
 @login_required
 def add_course(request):
-
     if not request.user.is_superuser:
         return PermissionDenied()
 
@@ -39,10 +40,23 @@ def add_course(request):
         form = CourseForm(request.POST)
         if form.is_valid():
             form.save()
+            # Check if there is an ending slash on the student code directory name
+            # If not, add one and save that to database
+            course = Course.objects.get(name=request.session['course_name'])
+            student_dir = course.student_code_dir
+            assignment_dir = course.assignment_base_dir
+            if not student_dir[-1:] == '/':
+                student_dir = student_dir + '/'
+                course.student_code_dir = student_dir
+                course.save()
+            if not assignment_dir[-1:] == '/':
+                assignment_dir = assignment_dir + '/'
+                course.assignment_base_dir = assignment_dir
+                course.save()
             return redirect('/manage/')
         else:
             return HttpResponse("Örrr")
-        #Fetch from Canvas version
+        # Fetch from Canvas version
         '''id = request.POST['course_id']
         if not id:
             return HttpResponse("No course id provided!")
@@ -69,6 +83,7 @@ def add_course(request):
         "course": course,
     })
 
+
 @login_required
 def add_assignment(request):
     if not request.user.is_superuser:
@@ -78,16 +93,11 @@ def add_assignment(request):
         form = AssignmentForm(request.POST)
         if form.is_valid():
             form.save()
-	    logging.info("A_Name" + form.cleaned_data['name'])
-            assignment_name = form.cleaned_data['name'].replace (" ", "_")
-            logging.info("A_Name" + assignment_name)
-            assignment_path = Course.objects.get(name = form.cleaned_data['course']).assignment_base_dir
-            if assignment_path[:-1] != '/':
-                assignment_path = assignment_path + '/'
-            assignment_path = assignment_path + assignment_name
+            assignment_name = form.cleaned_data['name'].replace(" ", "_")
+            assignment_path = Course.objects.get(name=form.cleaned_data['course']).assignment_base_dir + assignment_name
             if not os.path.exists(assignment_path):
-            	os.makedirs(assignment_path)
-                
+                os.makedirs(assignment_path)
+
             return redirect('/manage')
         else:
             return HttpResponse("Örrr")

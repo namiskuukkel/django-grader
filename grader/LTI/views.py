@@ -12,7 +12,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 import logging
 
-logging.basicConfig(filename='/var/log/grader/lti.log',level=logging.DEBUG)
+logging.basicConfig(filename='/var/log/grader/grader.log',level=logging.DEBUG)
 
 @csrf_exempt
 def launch_lti(request):
@@ -52,7 +52,7 @@ def launch_lti(request):
     email = get_lti_value(settings.LTI_EMAIL, tool_provider, encoding=encoding)
     roles = get_lti_value(settings.LTI_ROLES, tool_provider, encoding=encoding)
     #user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
-    course_id= get_lti_value('context_id', tool_provider, encoding=encoding)
+    #course_id= get_lti_value('context_id', tool_provider, encoding=encoding)
     course_name = get_lti_value('context_title', tool_provider, encoding=encoding)
     assignment = get_lti_value('resource_link_title', tool_provider, encoding=encoding)
     outcome_url = get_lti_value(settings.LTI_OUTCOME, tool_provider, encoding=encoding)
@@ -84,7 +84,6 @@ def launch_lti(request):
     """ Log in user and redirect to LOGIN_REDIRECT_URL defined in settings (default: accounts/profile) """
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
-    request.session['course_id'] = course_id
     request.session['course_name'] = course_name
     request.session['assignment_name'] = assignment
     request.session['outcome'] = outcome_url

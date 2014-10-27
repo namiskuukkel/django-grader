@@ -9,19 +9,28 @@
 {% for course in courses %}
 <h4>{{course.name}}</h4>
 <h5>Canvas ID: {{course.id}}</h5>
+
 <p>Contact: {{course.contact}}</p>
+
 <p>Student Code Directory: {{course.student_code_dir}}</p>
+
 <p>Assignment Base Directory: {{course.assignment_base_dir}}</p>
+
 <p>Uses Gitlab: {{course.use_gitlab}}</p>
 {% endfor %}
 
 {% for assignment in assignments %}
 <h4>{{assignment.name}}</h4>
 <h5>Course: {{assignment.course}}</h5>
+
 <p>Description: {{assignment.description}}</p>
+
 <p>Open from: {{assignment.open_from}}</p>
+
 <p>Open till: {{assignment.open_till}}</p>
+
 <p># of Attempts: {{assignment.attempts}}</p>
+
 <p>Execution Time Limit: {{assignment.execution_timeout}}</p>
 {% endfor %}
 </body>
