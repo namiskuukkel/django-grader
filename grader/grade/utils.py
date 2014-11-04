@@ -22,12 +22,13 @@ def save(course_name, assignment_name, username, code):
                 if not os.path.exists(student_dir):
                     try:
                         os.makedirs(student_dir)
-                    except:
-                        logging.error("Failed to create: " + student_dir)
-                f = open(student_dir + "/to_test.py", 'w')
-                file = File(f)
-                file.write(code)
-                f.close()
+                    except Exception as e:
+			template = "An exception of type {0} occured. Arguments:\n{1!r}"
+                	message = template.format(type(e).__name__, e.args)
+                	return HttpResponse(message)
+		with open(student_dir + "/to_test.py", 'w') as f:
+		    file = File(f)
+		    file.write(code)
             else:
                 # TODO
                 #Myös TODO: Jos github tallennus failaa, tee lokaali kopio

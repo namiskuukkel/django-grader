@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .utils import *
-
+import sys
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 @login_required
@@ -55,21 +55,28 @@ def code(request):
                 code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") +\
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
-                out = open(code_dir + 'result.txt', 'w')
-                err = open(code_dir + 'error.txt', 'w')
-                logging.info(out)
-                logging.info(err)
+                out = open(code_dir + 'result.txt', 'w+')
+                err = open(code_dir + 'error.txt', 'w+')
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
                 subprocess.call(["cp", "/home/docker/Run-Docker/run-entrypoint.sh", code_dir])
-                if run(code_dir, "student_run", out, err, timeout):
-                    message = out.read() + '&' + err.read()
-                else:
-                    message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
-                out.close()
+	    except Exception as e:
+                template = "An exception of type {0} occured. Arguments:\n{1!r}"
+                message = template.format(type(e).__name__, e.args)
+                return HttpResponse(message+  "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+            if run(code_dir, "student_run", out, err, timeout):
+		out.close()
                 err.close()
-            except:
-                return HttpResponse("Tapahtui virhe! Koodin ajaminen epäonnistui." \
-                          "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+	        out = open(code_dir + 'result.txt', 'r')
+                err = open(code_dir + 'error.txt', 'r')
+		message = out.read() + '&' + err.read()
+            else:
+                message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
+            out.close()
+            err.close()
+            '''except Exception as e:
+                template = "An exception of type {0} occured. Arguments:\n{1!r}"
+    		message = template.format(type(e).__name__, e.args)
+		return HttpResponse(message+  "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")'''
 
         #return redirect('/')
     else:
