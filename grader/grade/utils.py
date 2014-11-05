@@ -76,3 +76,12 @@ def run(code_dir, container, out, err, timeout):
         thread.join()
         return False
     return True
+
+def is_empty(stream):
+    stream.seek(0)
+    #Check if the code run was succesful
+    first_char = stream.read(1) #get the first character
+    if not first_char:
+        return True
+    else:
+        return False

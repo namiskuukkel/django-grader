@@ -13,4 +13,5 @@ useradd -u "$uid" -G code -d "/home/grader" -m grader
 chgrp code /home/grader
 chmod 0775 /home/grader
 cd /home/grader
+chroot /home/grader
 python3.4 /test/to_test.py

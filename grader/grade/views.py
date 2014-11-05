@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .utils import *
 import sys
+import imp
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 @login_required
@@ -52,33 +53,38 @@ def code(request):
             # '-m', '50m', 'student_test', 'to_test.py', 'test'])
             build_docker("run")
             try:
-                code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") +\
+                code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + \
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
                 out = open(code_dir + 'result.txt', 'w+')
                 err = open(code_dir + 'error.txt', 'w+')
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
                 subprocess.call(["cp", "/home/docker/Run-Docker/run-entrypoint.sh", code_dir])
-	    except Exception as e:
+            except Exception as e:
                 template = "An exception of type {0} occured. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)
                 return HttpResponse(message+  "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
             if run(code_dir, "student_run", out, err, timeout):
-		out.close()
+                #Close and open again for reading (some errors appeared with wr)
+                #TODO: testaa uudestaan toimiiko
+                out.close()
                 err.close()
-	        out = open(code_dir + 'result.txt', 'r')
+                out = open(code_dir + 'result.txt', 'r')
                 err = open(code_dir + 'error.txt', 'r')
-		message = out.read() + '&' + err.read()
+                #Should have something in either of these
+                if not is_empty(out):
+                    message = out.read()
+                else:
+                    if not is_empty(err):
+                        message = err.read()
+                        succesful = False
+                    else:
+                        return HttpResponse("Oops! You shouldn't have gotten here!")
             else:
                 message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
             out.close()
             err.close()
-            '''except Exception as e:
-                template = "An exception of type {0} occured. Arguments:\n{1!r}"
-    		message = template.format(type(e).__name__, e.args)
-		return HttpResponse(message+  "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")'''
-
-        #return redirect('/')
+            #return redirect('/')
     else:
         form = EditorForm()
         code_file = Course.objects.get(
@@ -95,7 +101,7 @@ def code(request):
         "now": datetime.now(),
         "message": message,
         "attempts_left": attempts_left,
-    })
+        })
 
 
 @login_required
@@ -106,7 +112,6 @@ def grade(request):
         assignment_name = request.session['assignment_name']
         course_name = request.session['course_name']
         if form.is_valid():
-
             #Save on valid form submission
             save(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
             #Build docker image
@@ -115,24 +120,69 @@ def grade(request):
             code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name + '/' + request.user.username
             # Copy test files from assignment directory to the shared volume
             subprocess.call(["cp", Course.objects.get(name=request.session['course_name']).assignment_base_dir + "/"
-                     + request.session['assignment_name'] + "/*", code_dir])
+                             + request.session['assignment_name'] + "/*", code_dir])
             #Copy the entrypoint for docker to the shared volume
             subprocess.call(["cp", "/home/docker/Grade-Docker/grader-entrypoint.sh", code_dir])
-            for test in code_dir.description.tests:
+            description = imp.load_source(code_dir + 'description')
+
+            result = open(code_dir + 'test_result.txt', 'w')
+            for test in description.tests:
                 try:
+                    successful = True
                     out = open(code_dir + test + '_result.txt', 'w')
-                    err = open(code_dir + test+ '_error.txt', 'w')
-                    logging.info(out)
-                    logging.info(err)
+                    err = open(code_dir + test + '_error.txt', 'w')
                     timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
+                    result.write(test)
                     if run(code_dir, "student_grade", out, err, timeout):
-                        message = out.read() + '&' + err.read()
+                        #Close and open again for reading (some errors appeared with w+)
+                        out.close()
+                        err.close()
+                        out = open(code_dir + 'result.txt', 'r')
+                        err = open(code_dir + 'error.txt', 'r')
+                        #Should have something in either of these
+                        if not is_empty(out):
+                            result.write("Ohjelmasi tulosti:")
+                            result.write(out.read())
+                        else:
+                            if not is_empty(err):
+                                message = err.read()
+                                successful = False
+                            else:
+                                return HttpResponse("Oops! You shouldn't have gotten here!")
                     else:
                         message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
+                        successful = False
                     out.close()
                     err.close()
+                    #Remove the old files so you can be sure that there are no left overs on the next run
+                    os.remove(code_dir + test + '_result.txt')
+                    os.remove(code_dir + test + '_error.txt')
                 except:
                     return HttpResponse("Tapahtui virhe! Koodin ajaminen epäonnistui." \
-                            "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+                                        "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+            assignment = None
+            try:
+                assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
+            except Assignment.DoesNotExist:
+                logging.warning('Assignment not found: ' + assignment_name)
+                return HttpResponse("No assignment found!")
 
-    redirect("/code")
+            #If assignment.attempts > 0, then the number of attempts is limited
+            if assignment.attempts > 0:
+                try:
+                    user_attempts = UserAttempts.objects.get(user__username=request.user.username, assignment__id=assignment.id)
+                    #One attempt has been used
+                    user_attempts.attempts = user_attempts - 1
+                except:
+                    return HttpResponse("Oops! You shouldn't have gotten here!")
+            grade ={
+                "result": os.path.abspath(code_dir + 'test_result.txt')
+            }
+        else:
+            return HttpResponse("Jokin meni pieleen formin palautuksessa")
+
+def result(request):
+    redirect('result', grade_report = grade)
+
+def index():
+    return HttpResponse("Tulit tänne suoraan kulkematta Canvas ruudun kautta")

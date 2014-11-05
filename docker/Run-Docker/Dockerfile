@@ -6,5 +6,4 @@ MAINTAINER Riitta Hietaranta <riitta.hietaranta@tut.fi>
 VOLUME /test
 WORKDIR /test
 ADD to_test.py to_test.py
-ADD run-entrypoint.sh run-entrypoint.sh
-ENTRYPOINT ["/bin/bash", "/test/run-entrypoint.sh"]
+ENTRYPOINT python3.4 /test/to_test.py
