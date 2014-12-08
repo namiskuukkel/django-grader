@@ -39,32 +39,55 @@ def save(course_name, assignment_name, username, code):
     except:
         return HttpResponse("Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
 
-def build_docker(type):
+def build_docker():
     try:
-        logging.info("Building container")
-        #Build container
+        logging.info("Building image")
+        #Build docker image
         out = open('/home/docker/success', 'w')
         err = open('/home/docker/error', 'w')
-        if type == "run":
-            container = "student_run"
-            folder = "/home/docker/Run-Docker/"
-        elif type == "grade":
-            container = "student_grade"
-            folder = "/home/docker/Grade-Docker/"
-        else:
-            return
-        subprocess.Popen(['sudo', 'docker', 'build', '-t', container, folder],
+
+        image = "test_environment"
+        folder = "/home/docker/Run-Docker/"
+
+        #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
+        subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
+
+        subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
                                      stdout=out, stderr=err)
         out.close()
         err.close()
     except:
         return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
 
-def run(code_dir, container, out, err, timeout):
+def build_docker(type):
+    try:
+        logging.info("Building image")
+        #Build docker image
+        out = open('/home/docker/success', 'w')
+        err = open('/home/docker/error', 'w')
+        if type == "run":
+            image = "student_run"
+            folder = "/home/docker/Run-Docker/"
+        elif type == "grade":
+            image = "student_grade"
+            folder = "/home/docker/Grade-Docker/"
+        else:
+            return
+
+        #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
+        subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
+        subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
+                                     stdout=out, stderr=err)
+        out.close()
+        err.close()
+    except:
+        return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+
+def run(code_dir, image, out, err, timeout):
     p = None
     def target():
-        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir + ':/test',
-                              '--net', 'none', '--rm', container], stdout=out, stderr=err)
+        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir + ':/test' ,'-w', '/test',
+                              '--net', 'none', '--rm', image], stdout=out, stderr=err)
         #Wait for process to terminate
         p.communicate()
 

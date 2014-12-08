@@ -5,7 +5,7 @@ points_required = 5
 example_code = "example.py"
 test1 = { "type": "compare_output",
           "description": "Tulostetaan stringi",
-          "input": "test_input1",
+          "test": "diff_test()",
           "timout": 15,
           "test_results": ["Jokin meni pieleen", "expected"],
           "test_result_limits": [5, 0],
