@@ -9,35 +9,38 @@ import subprocess, threading, os
 
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
-def save(course_name, assignment_name, username, code):
+def save_code(course_name, assignment_name, username, code):
     try:
-        try:
-            course = Course.objects.get(name=course_name)
-            if course.use_gitlab is False:
+        course = Course.objects.get(name=course_name)
+        if course.use_gitlab is False:
 
-                student_dir = course.student_code_dir + assignment_name.replace(" ", "_") + '/' + username
-                #Note the character constraints on directory and file names!
-                #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
-                logging.info("attempt:" + student_dir)
-                if not os.path.exists(student_dir):
-                    try:
-                        os.makedirs(student_dir)
-                    except Exception as e:
-			template = "An exception of type {0} occured. Arguments:\n{1!r}"
-                	message = template.format(type(e).__name__, e.args)
-                	return HttpResponse(message)
-		with open(student_dir + "/to_test.py", 'w') as f:
-		    file = File(f)
-		    file.write(code)
-            else:
-                # TODO
-                #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
-                print("stuff")
-        except Course.DoesNotExist:
-            logging.warning('Course not found: ' + course_name)
-            return HttpResponse("No course found!")
+            student_dir = course.student_code_dir + assignment_name.replace(" ", "_") + '/' + username
+            #Note the character constraints on directory and file names!
+            #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
+            logging.info("attempt:" + student_dir)
+            #Create student directory if one doesn't exist already
+            if not os.path.exists(student_dir):
+                try:
+                    os.makedirs(student_dir)
+                except Exception as e:
+                    template = "An exception of type {0} occured. Arguments:\n{1!r}"
+                    message = template.format(type(e).__name__, e.args)
+                    return message
+            #Write student code to file
+            with open(student_dir + "/to_test.py", 'w') as f:
+                file = File(f)
+                file.write(code)
+
+            return "ok"
+        else:
+            # TODO
+            #Myös TODO: Jos github tallennus failaa, tee lokaali kopio
+            print("stuff")
+    except Course.DoesNotExist:
+        logging.warning('Course not found: ' + course_name)
+        return "No course found!"
     except:
-        return HttpResponse("Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+        return "Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
 def build_docker():
     try:
@@ -56,10 +59,11 @@ def build_docker():
                                      stdout=out, stderr=err)
         out.close()
         err.close()
+        return "ok"
     except:
-        return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+        return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
-def build_docker(type):
+'''def build_docker(type):
     try:
         logging.info("Building image")
         #Build docker image
@@ -82,6 +86,7 @@ def build_docker(type):
         err.close()
     except:
         return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+'''
 
 def run(code_dir, image, out, err, timeout):
     p = None

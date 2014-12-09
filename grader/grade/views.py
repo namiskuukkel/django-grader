@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .utils import *
+from .test_tools import *
 import sys
 import imp
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
@@ -47,11 +48,11 @@ def code(request):
     if request.method == 'POST':
         form = EditorForm(request.POST)
         if form.is_valid():
-            save(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+            save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
             # '-m', '50m', 'student_test', 'to_test.py', 'test'])
-            build_docker("run")
+            build_docker()
             try:
                 code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + \
                            '/' + request.user.username + '/'
@@ -113,9 +114,7 @@ def grade(request):
         course_name = request.session['course_name']
         if form.is_valid():
             #Save on valid form submission
-            save(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
-            #Build docker image
-            build_docker("grade")
+            save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
             code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name + '/' + request.user.username
             # Copy test files from assignment directory to the shared volume
@@ -127,39 +126,11 @@ def grade(request):
 
             result = open(code_dir + 'test_result.txt', 'w')
             for test in description.tests:
-                try:
-                    successful = True
-                    out = open(code_dir + test + '_result.txt', 'w')
-                    err = open(code_dir + test + '_error.txt', 'w')
-                    timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
-                    result.write(test)
-                    if run(code_dir, "student_grade", out, err, timeout):
-                        #Close and open again for reading (some errors appeared with w+)
-                        out.close()
-                        err.close()
-                        out = open(code_dir + 'result.txt', 'r')
-                        err = open(code_dir + 'error.txt', 'r')
-                        #Should have something in either of these
-                        if not is_empty(out):
-                            result.write("Ohjelmasi tulosti:")
-                            result.write(out.read())
-                        else:
-                            if not is_empty(err):
-                                message = err.read()
-                                successful = False
-                            else:
-                                return HttpResponse("Oops! You shouldn't have gotten here!")
-                    else:
-                        message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
-                        successful = False
-                    out.close()
-                    err.close()
-                    #Remove the old files so you can be sure that there are no left overs on the next run
-                    os.remove(code_dir + test + '_result.txt')
-                    os.remove(code_dir + test + '_error.txt')
-                except:
-                    return HttpResponse("Tapahtui virhe! Koodin ajaminen epäonnistui." \
-                                        "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+                result.write(test["name"])
+                result.write(test["description"])
+                diff_test(test, code_dir, result)
+
+
             assignment = None
             try:
                 assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
