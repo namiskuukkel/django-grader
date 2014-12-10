@@ -52,7 +52,7 @@ def code(request):
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
             # '-m', '50m', 'student_test', 'to_test.py', 'test'])
-            build_docker()
+            build_docker("student")
             try:
                 code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + \
                            '/' + request.user.username + '/'
@@ -60,7 +60,7 @@ def code(request):
                 out = open(code_dir + 'result.txt', 'w+')
                 err = open(code_dir + 'error.txt', 'w+')
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
-                subprocess.call(["cp", "/home/docker/Run-Docker/run-entrypoint.sh", code_dir])
+                subprocess.call(["cp", "/home/docker/Student-Docker/run-entrypoint.sh", code_dir])
             except Exception as e:
                 template = "An exception of type {0} occured. Arguments:\n{1!r}"
                 message = template.format(type(e).__name__, e.args)
@@ -121,7 +121,7 @@ def grade(request):
             subprocess.call(["cp", Course.objects.get(name=request.session['course_name']).assignment_base_dir + "/"
                              + request.session['assignment_name'] + "/*", code_dir])
             #Copy the entrypoint for docker to the shared volume
-            subprocess.call(["cp", "/home/docker/Grade-Docker/grader-entrypoint.sh", code_dir])
+            subprocess.call(["cp", "/home/docker/Example-docker/grader-entrypoint.sh", code_dir])
             description = imp.load_source(code_dir + 'description')
 
             result = open(code_dir + 'test_result.txt', 'w')

@@ -15,4 +15,3 @@ chmod 0775 /home/grader
 cd /home/grader
 chroot /home/grader
 su - student
-python

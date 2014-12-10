@@ -26,8 +26,9 @@ def save_code(course_name, assignment_name, username, code):
                     template = "An exception of type {0} occured. Arguments:\n{1!r}"
                     message = template.format(type(e).__name__, e.args)
                     return message
+            #HARDCODED
             #Write student code to file
-            with open(student_dir + "/to_test.py", 'w') as f:
+            with open(student_dir + "/student_code.py", 'w') as f:
                 file = File(f)
                 file.write(code)
 
@@ -42,7 +43,7 @@ def save_code(course_name, assignment_name, username, code):
     except:
         return "Koodin tallennus epäonnistui. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
-def build_docker():
+'''def build_docker():
     try:
         logging.info("Building image")
         #Build docker image
@@ -50,7 +51,7 @@ def build_docker():
         err = open('/home/docker/error', 'w')
 
         image = "test_environment"
-        folder = "/home/docker/Run-Docker/"
+        folder = "/home/docker/Student-Docker/"
 
         #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
         subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
@@ -61,38 +62,56 @@ def build_docker():
         err.close()
         return "ok"
     except:
-        return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
+        return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"'''
 
-'''def build_docker(type):
+def build_docker(type):
     try:
         logging.info("Building image")
+        #HARDCODED
         #Build docker image
         out = open('/home/docker/success', 'w')
         err = open('/home/docker/error', 'w')
-        if type == "run":
-            image = "student_run"
-            folder = "/home/docker/Run-Docker/"
-        elif type == "grade":
-            image = "student_grade"
-            folder = "/home/docker/Grade-Docker/"
+
+        #This 'if' is for building a docker image based on different Dockerfiles
+        #Student version will have 'python3.4 student_code_file' as ENTRYPOINT and Example has example code
+        #This could be done with reading a varying code source to stdin in "docker run" subprocess, but this way
+        #is significantly faster
+        if type == "student":
+            image = "student_image"
+            #HARDCODED
+            folder = "/home/docker/Student-Docker/"
+        elif type == "example":
+            image = "example_image"
+            #HARDCODED
+            folder = "/home/docker/Example-Docker/"
         else:
             return
 
         #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
-        subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
+        p = subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
+        #Wait for the previous image to be removed before continuing
+        p.communicate()
+        #TODO: tää kans tappolistalle
         subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
                                      stdout=out, stderr=err)
         out.close()
         err.close()
+        return "ok"
     except:
-        return HttpResponse("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
-'''
+        return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
+
 
 def run(code_dir, image, out, err, timeout):
     p = None
     def target():
+        #Volume: Share a folder with Docker container; 'folder_to_share':'folder_in_docker'
+        #-w, working directory: Define working directory on Docker container
+        #--net, networking: Networking settings for Docker container; none for no networking
+        #--rm, remove: Automatically remove container after it finishes
+        #image: The image which the container is built on
         p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir + ':/test' ,'-w', '/test',
                               '--net', 'none', '--rm', image], stdout=out, stderr=err)
+
         #Wait for process to terminate
         p.communicate()
 
