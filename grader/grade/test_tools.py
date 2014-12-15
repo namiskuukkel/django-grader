@@ -19,7 +19,7 @@ def diff_test(test, code_dir, result):
         out = open(code_dir + test + '_student_result.txt', 'w')
         err = open(code_dir + test + '_student_error.txt', 'w')
 
-        if utils.run(code_dir, "test_environment", out, err, test["timeout"]):
+        if utils.run(code_dir, "student_image", out, err, test["timeout"]):
             #Close and open again for reading (some errors appeared with w+)
             out.close()
             err.close()

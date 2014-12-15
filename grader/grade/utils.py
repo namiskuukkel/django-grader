@@ -65,37 +65,37 @@ def save_code(course_name, assignment_name, username, code):
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"'''
 
 def build_docker(type):
-    try:
-        logging.info("Building image")
+
+    logging.info("Building image")
+
+    #This 'if' is for building a docker image based on different Dockerfiles
+    #Student version will have 'python3.4 student_code_file' as ENTRYPOINT and Example has example code
+    #This could be done with reading a varying code source to stdin in "docker run" subprocess, but this way
+    #is significantly faster
+    if type == "student":
+        image = "student_image"
         #HARDCODED
-        #Build docker image
-        out = open('/home/docker/success', 'w')
-        err = open('/home/docker/error', 'w')
+        folder = "/home/docker/Student-Docker/"
+    elif type == "example":
+        image = "example_image"
+        #HARDCODED
+        folder = "/home/docker/Example-Docker/"
+    else:
+        return "Unknown docker type"
 
-        #This 'if' is for building a docker image based on different Dockerfiles
-        #Student version will have 'python3.4 student_code_file' as ENTRYPOINT and Example has example code
-        #This could be done with reading a varying code source to stdin in "docker run" subprocess, but this way
-        #is significantly faster
-        if type == "student":
-            image = "student_image"
-            #HARDCODED
-            folder = "/home/docker/Student-Docker/"
-        elif type == "example":
-            image = "example_image"
-            #HARDCODED
-            folder = "/home/docker/Example-Docker/"
-        else:
-            return
-
+    try:
         #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
         p = subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
         #Wait for the previous image to be removed before continuing
         p.communicate()
         #TODO: tää kans tappolistalle
         subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
-                                     stdout=out, stderr=err)
-        out.close()
-        err.close()
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if stdout:
+            logging.info(stdout)
+        if stderr:
+            logging.error(stderr)
         return "ok"
     except:
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"

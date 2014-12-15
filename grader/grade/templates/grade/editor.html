@@ -14,6 +14,7 @@
     </script>
 </head>
 <body>
+    <!--The following lines result in the editor not loading-->
     {% if assignment.open_from and now < assignment.open_from %}
     <p>This exercise isn't open yet!</p>
     {% elif assignment.open_till and now >= assignment.open_till %}
@@ -23,6 +24,7 @@
     {% if attempts_left == 0 %}
     <p>Olet käyttänyt kaikki yrityskertasi! </p>
     {% endif %}
+    <!--End of exceptional situations-->
 
     <h1>{{assignment.name}}</h1>
     <p>{{assignment.description}}</p>
@@ -34,6 +36,7 @@
     {% else %}
     <!-- Much attempts. Over 9000. Wow. -->
     {% endif %}
+    {{error}}
     {{message}}
     <form id="code_area" action="" method="post">
     {% csrf_token %}
