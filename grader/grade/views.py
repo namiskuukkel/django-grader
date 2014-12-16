@@ -135,6 +135,9 @@ def grade(request):
                                                          assignment__id=assignment.id)
                 #One attempt has been used
                 attempts_left = user_attempts.attempts
+                if attempts_left == 0:
+                    return HttpResponse("Olet jo käyttänyt kaikki yrityskertasi")
+
             except Exception as e:
                 logging.error(template.format(type(e).__name__, e.args))
                 redirect('error')

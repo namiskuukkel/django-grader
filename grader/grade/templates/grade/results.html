@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Arvostelun tulokset</title>
+</head>
+<body>
+
+    <h1>{{assignment.name}}</h1>
+    <h2>{{scored_points}}/{{total_points}}</h2>
+
+    {% if success == True %}
+    <h3>Läpi meni!</h3>
+    {% else %}
+    <h3>Et läpäissyt tehtävää</h3>
+    {% endif %}
+
+    {% for result in results %}
+    <h3>{{result.assignment_name}}</h3>
+    {% endfor %}
+
+    {% if attempts_left == 0 %}
+    <p>Olet käyttänyt kaikki yrityskertasi! </p>
+    {% endif %}
+
+    <h1>{{assignment.name}}</h1>
+    <p>{{assignment.description}}</p>
+
+    {% if attempts_left == 1 %}
+    <p>Sinulla on vain YKSI yrityskerta jäljellä! </p>
+    {% elif attempts_left != 9999 %}
+    <p>Sinulla on {{attempts_left}} yrityskertaa jäljellä </p>
+    {% else %}
+    <!-- Much attempts. Over 9000. Wow. -->
+    {% endif %}
+    <button type="button" onclick="run()">Yritä uudestaan</button>
+    <button type="button" onclick="return_to_canvas()">Palaa Canvakseen</button>
+</body>
+</html>
