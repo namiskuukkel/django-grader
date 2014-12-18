@@ -7,11 +7,9 @@ from django.contrib.auth.models import User
 
 #TODO: Siirrä näitä testi olioihin
 class TestResult(models.Model):
-    assignment_name = models.ForeignKey(Assignment, related_name='assignment_name')
     type = models.TextField()
     test_name = models.TextField()
     description = models.TextField()
-    user = models.ForeignKey(User, related_name='user')
     student_result = models.TextField(blank=True)
     feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -20,10 +18,15 @@ class TestResult(models.Model):
         abstract = True
 
 class NumericResult(TestResult):
+    assignment_name = models.ForeignKey(Assignment, related_name='numeric_assignment_name')
+    user = models.ForeignKey(User, related_name='numeric_student')
     score = models.SmallIntegerField()
     max_score = models.SmallIntegerField()
 
 class BinaryResult(TestResult):
+    #Dublicates are due to reverse name clash errors
+    assignment_name = models.ForeignKey(Assignment, related_name='binary_assignment_name')
+    user = models.ForeignKey(User, related_name='binary_student')
     passed = models.BooleanField()
 
 class Snippet(models.Model):
