@@ -11,7 +11,7 @@ class TestResult(models.Model):
     type = models.TextField()
     test_name = models.TextField()
     description = models.TextField()
-    user = models.ForeignKey(User, related_name='user')
+    user = models.ForeignKey(User, related_name='student')
     student_result = models.TextField(blank=True)
     feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
