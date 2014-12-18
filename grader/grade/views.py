@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .utils import *
 from .test_tools import *
+from .models import *
 import sys
 import imp
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
@@ -147,7 +148,7 @@ def grade(request):
             save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
             code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name + '/'\
-                       + request.user.username
+                       + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
             subprocess.call(["cp", Course.objects.get(name=request.session['course_name']).assignment_base_dir + "/"
                              + request.session['assignment_name'] + "/*", code_dir])
@@ -155,32 +156,59 @@ def grade(request):
             #subprocess.call(["cp", "/home/docker/Example-docker/grader-entrypoint.sh", code_dir])
             description = imp.load_source(code_dir + 'description')
 
-            result = open(code_dir + 'test_result.txt', 'w')
+            results = []
             for test in description.tests:
-                result.write(test["name"])
-                result.write(test["description"])
-                if test["type"] == "compare_output":
+                result = None
+                if description.scale == "numeric":
+                    result = NumericResult()
+                elif description.scale == "pass":
+                    result = BinaryResult()
+                else:
+                    logging.error("Faulty type of grading scale!")
+                    redirect('error')
+                result.assignment_name = assignment_name
+                result.test_name = test['name']
+                result.description = test['description']
+                result.user = request.user
+                result.save()
+
+                if test['type'] == "compare_output":
                     test_result = diff_test(test, code_dir, result)
-                    if test_result["pass"] == "error":
+
+                    #There was an error on test execution, student will not lose attempts
+                    if test_result['pass'] == "error":
+                        logging.error(test_result['message'])
                         redirect('error')
-                    elif test_result["pass"] == "pass":
-                        result.write(test["points"])
+                    elif test_result['pass'] == "yes":
                         #If assignment.attempts > 0, then the number of attempts is limited
                         if assignment.attempts > 0:
-                            try:
-                                user_attempts = UserAttempts.objects.get(user__username=request.user.username,
-                                                                         assignment__id=assignment.id)
-                                #One attempt has been used
-                                user_attempts.attempts = user_attempts - 1
-                                user_attempts.save()
-                            except Exception as e:
-                                logging.error(template.format(type(e).__name__, e.args))
-                                redirect('error')
+                            user_attempts.attempts = attempts_left - 1
+                            user_attempts.save()
+
+                        if description.scale == "numeric":
+                            result.type = "numeric"
+                            result.score = test['points']
+                        elif description.scale == "pass":
+                            result.type = "pass"
+                            result.passed = True
+                    #Didn't pass!
+                    else:
+                        if assignment.attempts > 0:
+                            user_attempts.attempts = attempts_left - 1
+                            user_attempts.save()
+
+                        if description.scale == "numeric":
+                            result.type = "numeric"
+                            result.score = 0
+                        elif description.scale == "pass":
+                            result.type = "pass"
+                            result.passed = False
+
+                        if test_result['message'] == "unequal":
+                            result.feedback = test.test_results[0]
 
             return render(request, "grade/results.html",
                   {
-                    "form": form,
-                    "user": request.user,
                     "course": course_name,
                     "assignment_name": assignment_name,
                     "now": datetime.now(),

@@ -19,7 +19,7 @@ class Course(models.Model):
         return str(self.id + ' ' + self.name)
 
     def __unicode__(self):
-        return self.name;
+        return self.name
 
 
 class Assignment(models.Model):
