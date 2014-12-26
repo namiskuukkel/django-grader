@@ -72,7 +72,7 @@ def code(request):
                 #subprocess.call(["cp", "/home/docker/Student-Docker/run-entrypoint.sh", code_dir])
             except Exception as e:
                 logging.error( template.format(type(e).__name__, e.args))
-                return redirect('error')
+                return redirect('grader/error')
 
             if run(code_dir, "student_run", out, err, timeout):
                 logging.debug("Got this far")
@@ -130,7 +130,7 @@ def grade(request):
             assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
         except Exception as e:
             logging.error(template.format(type(e).__name__, e.args))
-            return redirect('error')
+            return redirect('grader/error')
 
         if assignment.attempts > 0:
             try:
@@ -143,7 +143,7 @@ def grade(request):
 
             except Exception as e:
                 logging.error(template.format(type(e).__name__, e.args))
-                return redirect('error')
+                return redirect('grader/error')
 
         if form.is_valid():
             #Save on valid form submission
@@ -170,7 +170,7 @@ def grade(request):
                     result = BinaryResult()
                 else:
                     logging.error("Faulty type of grading scale!")
-                    return redirect('error')
+                    return redirect('grader/error')
                 result.assignment = assignment
                 result.test_name = test.name
                 result.description = test.description
@@ -183,7 +183,7 @@ def grade(request):
                     #There was an error on test execution, student will not lose attempts
                     if test_result['pass'] == "error":
                         logging.error(test_result['message'])
-                        return redirect('/error/')
+                        return redirect('grader/error/')
                     elif test_result['pass'] == "yes":
                         logging.debug("Pass")
 			#If assignment.attempts > 0, then the number of attempts is limited
