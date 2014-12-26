@@ -95,6 +95,7 @@ def code(request):
             out.close()
             err.close()
             #return redirect('/')
+        
     else:
         form = EditorForm()
         code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name +\
@@ -214,15 +215,15 @@ def grade(request):
 
 		    result.save()
 
-            return render(request, "grade/results.html",
-                  {
-                    "course": course_name,
-                    "assignment_name": assignment_name,
-                    "now": datetime.now(),
-                    "message": message,
-                    "error": error_message,
-                    "attempts_left": attempts_left
-                  })
+        return render(request, "grade/results.html",
+        {
+            "course": course_name,
+            "assignment_name": assignment_name,
+            "now": datetime.now(),
+            "message": message,
+            "error": error_message,
+            "attempts_left": attempts_left
+        })
 
 
 def error(request):
