@@ -1,7 +1,8 @@
 # Django settings for grader project.
 
 DEBUG = ''
-from top_secret_settings import DEBUG
+try:
+   
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (

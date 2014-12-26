@@ -72,10 +72,11 @@ def code(request):
                 #subprocess.call(["cp", "/home/docker/Student-Docker/run-entrypoint.sh", code_dir])
             except Exception as e:
                 logging.error( template.format(type(e).__name__, e.args))
-                redirect('error')
+                return redirect('error')
 
             if run(code_dir, "student_run", out, err, timeout):
-                #Close and open again for reading (some errors appeared with wr)
+                logging.debug("Got this far")
+		#Close and open again for reading (some errors appeared with wr)
                 #TODO: testaa uudestaan toimiiko
                 out.close()
                 err.close()
@@ -128,7 +129,7 @@ def grade(request):
             assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
         except Exception as e:
             logging.error(template.format(type(e).__name__, e.args))
-            redirect('error')
+            return redirect('error')
 
         if assignment.attempts > 0:
             try:
@@ -141,7 +142,7 @@ def grade(request):
 
             except Exception as e:
                 logging.error(template.format(type(e).__name__, e.args))
-                redirect('error')
+                return redirect('error')
 
         if form.is_valid():
             #Save on valid form submission
@@ -150,14 +151,17 @@ def grade(request):
             code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name + '/'\
                        + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
-            subprocess.call(["cp", Course.objects.get(name=request.session['course_name']).assignment_base_dir + "/"
-                             + request.session['assignment_name'] + "/*", code_dir])
+	    test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
+		       + request.session['assignment_name'].replace(" ","_") + '/'
+	    logging.debug("Test_dir " + test_dir)
+            subprocess.call(["cp", test_dir + "/*", code_dir])
             #Copy the entrypoint for docker to the shared volume
             #subprocess.call(["cp", "/home/docker/Example-docker/grader-entrypoint.sh", code_dir])
-            description = imp.load_source(code_dir + 'description')
+            description = imp.load_source('description', test_dir + 'description.py')
 
             results = []
-            for test in description.tests:
+            for test_name in description.tests:
+		test = imp.load_source('test', test_dir + test_name)
                 result = None
                 if description.scale == "numeric":
                     result = NumericResult()
@@ -165,29 +169,30 @@ def grade(request):
                     result = BinaryResult()
                 else:
                     logging.error("Faulty type of grading scale!")
-                    redirect('error')
-                result.assignment_name = assignment_name
-                result.test_name = test['name']
-                result.description = test['description']
+                    return redirect('error')
+                result.assignment = assignment
+                result.test_name = test.name
+                result.description = test.description
                 result.user = request.user
-                result.save()
+                #result.save()
 
-                if test['type'] == "compare_output":
-                    test_result = diff_test(test, code_dir, result)
-
+                if test.type == "compare_output":
+                    test_result = diff_test(test, code_dir, test_dir, result)
+		    logging.debug(test_result['pass'])
                     #There was an error on test execution, student will not lose attempts
                     if test_result['pass'] == "error":
                         logging.error(test_result['message'])
-                        redirect('error')
+                        return redirect('/error/')
                     elif test_result['pass'] == "yes":
-                        #If assignment.attempts > 0, then the number of attempts is limited
+                        logging.debug("Pass")
+			#If assignment.attempts > 0, then the number of attempts is limited
                         if assignment.attempts > 0:
                             user_attempts.attempts = attempts_left - 1
                             user_attempts.save()
 
                         if description.scale == "numeric":
                             result.type = "numeric"
-                            result.score = test['points']
+                            result.score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
                             result.passed = True
@@ -196,7 +201,7 @@ def grade(request):
                         if assignment.attempts > 0:
                             user_attempts.attempts = attempts_left - 1
                             user_attempts.save()
-
+                        logging.debug("Da No Pass")
                         if description.scale == "numeric":
                             result.type = "numeric"
                             result.score = 0
@@ -206,6 +211,8 @@ def grade(request):
 
                         if test_result['message'] == "unequal":
                             result.feedback = test.test_results[0]
+
+		    result.save()
 
             return render(request, "grade/results.html",
                   {
@@ -219,7 +226,7 @@ def grade(request):
 
 
 def error(request):
-    return render(request, "grade/error.html")
+    return render(request, "grade/error.html", {})
 
 def index(request):
     return HttpResponse("Tulit tänne suoraan kulkematta Canvas ruudun kautta")

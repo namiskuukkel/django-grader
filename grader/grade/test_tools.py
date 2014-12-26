@@ -7,7 +7,7 @@ from .utils import *
 from .models import TestResult
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
-def diff_test(test, code_dir, result):
+def diff_test(test, code_dir, test_dir, result):
     #STUDENT PART
     try:
         build_docker("student")
@@ -25,12 +25,8 @@ def diff_test(test, code_dir, result):
             #Close and open again for reading (some errors appeared with w+)
             out.close()
             err.close()
-            try:
-                out = open(code_dir + 'result.txt', 'r')
-                err = open(code_dir + 'error.txt', 'r')
-            except:
-                return {"pass": "error",
-                "message": "Failed to open result files for reading" }
+            out = open(code_dir + 'result.txt', 'r')
+            err = open(code_dir + 'error.txt', 'r')
 
             #Should have something in either of these
             if not is_empty(out):
@@ -40,7 +36,7 @@ def diff_test(test, code_dir, result):
                 if not is_empty(err):
                     result.student_result = err.read()
                     result.feedback = "Koodisi tuotti virheen."
-                    result.save()
+                    #result.save()
                     return {"pass": "no",
                             "message": "error"}
                 else:
@@ -49,7 +45,7 @@ def diff_test(test, code_dir, result):
         else:
             result.student_result = "Keskeytetty"
             result.feedback = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
-            result.save()
+            #result.save()
             return {"pass": "no",
                     "message": "timeout"}
         out.close()
@@ -69,13 +65,13 @@ def diff_test(test, code_dir, result):
     #EXAMPLE PART
     needs_running = True
     try:
-        example_age = os.path.getmtime(code_dir + "example.py")
+        example_age = os.path.getmtime(test_dir + "example.py")
     except:
         return {"pass": "error",
                 "message": "Example.py not found" }
 
     try:
-        example_result_age = os.path.getmtime(code_dir + test + "_expected_output")
+        example_result_age = os.path.getmtime(test_dir + test + "_expected_output")
         #If example.py is a newer file than expected output file for this test, the test needs to be run with the new
         #example.py file
         if example_age < example_result_age:
@@ -97,13 +93,13 @@ def diff_test(test, code_dir, result):
             return {"pass": "error",
                     "message": "Failed to open example result files for writing" }
         try:
-            if run(code_dir, "example_image", expected, example_err, test["timeout"]):
+            if run(test_dir, "example_image", expected, example_err, test["timeout"]):
                 #Close and open again for reading (some errors appeared with w+)
                 out.close()
                 err.close()
                 try:
-                    expected = open(code_dir + 'result.txt', 'r')
-                    example_err = open(code_dir + 'error.txt', 'r')
+                    expected = open(test_dir + 'result.txt', 'r')
+                    example_err = open(test_dir + 'error.txt', 'r')
                 except:
                     return {"pass": "error",
                     "message": "Failed to open result files for reading" }

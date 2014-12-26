@@ -88,7 +88,7 @@ def launch_lti(request):
     request.session['assignment_name'] = assignment
     request.session['outcome'] = outcome_url
 
-    return HttpResponseRedirect('/grader/')
+    return HttpResponseRedirect('/grader/code/')
     
 def login_info(request):
     return HttpResponse('This webpage must be entered via a LMS')
