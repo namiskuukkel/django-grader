@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     url(r'^lti/', include('LTI.urls')),
     url(r'^manage/', include('course_management.urls')),
     url(r'^grader/', include('grade.urls')),
+    url(r'error', 'grade.views.error')
     url(r'$', 'grade.views.index')
     # Examples:
     # url(r'^$', 'grader.views.home', name='home'),
