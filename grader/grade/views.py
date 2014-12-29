@@ -9,6 +9,7 @@ from datetime import datetime
 from .utils import *
 from .test_tools import *
 from .models import *
+from docker_settings import *
 import sys
 import imp
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
@@ -58,43 +59,49 @@ def code(request):
             save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
-            # '-m', '50m', 'student_test', 'to_test.py', 'test'])
-            result = build_docker("student")
-            if result != "ok":
-                error_message = result
+            # '-m', '50m', 'student_test', 'to_test.py', 'test']
             try:
                 code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + \
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
-                out = open(code_dir + 'result.txt', 'w+')
-                err = open(code_dir + 'error.txt', 'w+')
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
-                #subprocess.call(["cp", "/home/docker/Student-Docker/run-entrypoint.sh", code_dir])
+                #subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
             except Exception as e:
                 logging.error( template.format(type(e).__name__, e.args))
                 return redirect('error')
+	    try:
+        	build_out = open('/var/log/grader/docker_success_student', 'w')
+        	build_err = open('/var/log/grader/docker_error_student', 'w')
 
-            if run(code_dir, "student_run", out, err, timeout):
-                logging.debug("Got this far")
+        	#TODO: tää kans tappolistalle
+        	subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', student_docker],
+                                 stdout=build_out, stderr=build_err)
+            except:
+		logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+        	return redirect('error')
+            build_out.close()
+	    build_err.close()
+	    
+	    out_file = code_dir + "result.txt"
+	    err_file  = code_dir + "error.txt"
+            if run(code_dir, "student_image", out_file, err_file, timeout):
 		#Close and open again for reading (some errors appeared with wr)
                 #TODO: testaa uudestaan toimiiko
-                out.close()
-                err.close()
-                out = open(code_dir + 'result.txt', 'r')
-                err = open(code_dir + 'error.txt', 'r')
                 #Should have something in either of these
-                if not is_empty(out):
-                    message = out.read()
+                if not is_empty(out_file):
+                    output = open(out_file, 'r')
+		    message = output.read()
+		    logging.debug("out:"+message)
+		    output.close()
                 else:
-                    if not is_empty(err):
-                        error = err.read()
+                    if not is_empty(err_file):
+			errput = open(err_file, 'r')
+                        error = errput.read()
+			errput.close()
                     else:
                         return HttpResponse("Oops! You shouldn't have gotten here!")
             else:
                 error_message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
-            out.close()
-            err.close()
-            #return redirect('/')
         
     else:
         form = EditorForm()
@@ -149,7 +156,7 @@ def grade(request):
             #Save on valid form submission
             save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
-            code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name + '/'\
+            code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + '/'\
                        + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
 	    test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
@@ -157,7 +164,7 @@ def grade(request):
 	    logging.debug("Test_dir " + test_dir)
             subprocess.call(["cp", test_dir + "/*", code_dir])
             #Copy the entrypoint for docker to the shared volume
-            #subprocess.call(["cp", "/home/docker/Example-docker/grader-entrypoint.sh", code_dir])
+            #subprocess.call(["cp", example_docker + "Dockerfile", test_dir])
             description = imp.load_source('description', test_dir + 'description.py')
 
             results = []
@@ -193,7 +200,7 @@ def grade(request):
 
                         if description.scale == "numeric":
                             result.type = "numeric"
-                            result.score = test.points
+                            result.max_score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
                             result.passed = True
@@ -206,6 +213,7 @@ def grade(request):
                         if description.scale == "numeric":
                             result.type = "numeric"
                             result.score = 0
+			    result.max_score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
                             result.passed = False
