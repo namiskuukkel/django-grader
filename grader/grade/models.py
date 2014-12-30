@@ -7,8 +7,8 @@ class TestResult(models.Model):
     user = models.ForeignKey(User, related_name='user')
     score = models.SmallIntegerField()
     max_score = models.SmallIntegerField()
-    student_result = models.TextField()
-    feedback = models.TextField()
+    student_result = models.TextField(blank=True)
+    feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

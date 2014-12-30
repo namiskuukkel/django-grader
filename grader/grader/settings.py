@@ -1,6 +1,10 @@
 # Django settings for grader project.
 
-DEBUG = True
+DEBUG = ''
+try:
+   from dev_settings import DEBUG
+except ImportError:
+   pass
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -9,12 +13,22 @@ ADMINS = (
 
 MANAGERS = ADMINS
 LOGIN_URL = '/lti/login_info/'
+BACKEND = ''
+NAME = ''
+USER = ''
+PASSWORD = ''
+
+try:
+   from dev_settings import BACKEND, NAME, USER, PASSWORD
+except ImportError:
+   pass
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'grader',                      # Or path to database file if using sqlite3.
-        'USER': 'root',                      # Not used with sqlite3.
-        'PASSWORD': 'k~^^;I!5l0l8^~Jl',                  # Not used with sqlite3.
+        'ENGINE': BACKEND, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': NAME,                      # Or path to database file if using sqlite3.
+        'USER': USER,                      # Not used with sqlite3.
+        'PASSWORD': PASSWORD,                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
