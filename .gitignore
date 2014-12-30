@@ -7,4 +7,5 @@ grader/.idea/workspace.xml
 /.idea/workspace.xml
 .idea
 /grader/grader/top_secret_settings.py
-/grader-static/
+/grader-static
+/grader-media
