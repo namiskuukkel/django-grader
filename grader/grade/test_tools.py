@@ -87,7 +87,7 @@ def diff_test(test, code_dir, test_dir, result):
         pass
 
     if not needs_running:
-        expected = open(expected_file)
+        expected = open(expected_file, 'r')
     else:
 	try:
             out = open('/var/log/grader/example_success_docker', 'w')
@@ -106,6 +106,7 @@ def diff_test(test, code_dir, test_dir, result):
 	error_file = test_dir + test.name.replace(" ","_") + '_unexpected_error'
 
         try:
+	    logging.debug("Test_dir " + test_dir)
             if run(test_dir, "example_image", expected_file, error_file, test.timeout):
 
                 #Should have something in either of these
