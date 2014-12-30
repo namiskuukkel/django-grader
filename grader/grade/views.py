@@ -65,46 +65,55 @@ def code(request):
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
-                #subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
+                #Dockerfile has to be in the same directory where student code is or student code won't be found!
+                subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
             except Exception as e:
                 logging.error( template.format(type(e).__name__, e.args))
                 return redirect('error')
-	    try:
-        	build_out = open('/var/log/grader/docker_success_student', 'w')
-        	build_err = open('/var/log/grader/docker_error_student', 'w')
+            try:
+                build_out = open('/var/log/grader/docker_success_student', 'w')
+                build_err = open('/var/log/grader/docker_error_student', 'w')
 
-        	#TODO: tää kans tappolistalle
-        	subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', student_docker],
-                                 stdout=build_out, stderr=build_err)
+                #TODO: tää kans tappolistalle
+                subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
+                                     stdout=build_out, stderr=build_err)
             except:
-		logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
-        	return redirect('error')
+                logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+                if build_out not in locals()or build_err not in locals():
+                    build_out.close()
+                    build_err.close()
+                return redirect('error')
             build_out.close()
-	    build_err.close()
-	    
-	    out_file = code_dir + "result.txt"
-	    err_file  = code_dir + "error.txt"
+            build_err.close()
+
+            out_file = code_dir + "result.txt"
+            err_file  = code_dir + "error.txt"
+            #Run student code in Docker: Returns True if running succeeded and False if running took too long
             if run(code_dir, "student_image", out_file, err_file, timeout):
-		#Close and open again for reading (some errors appeared with wr)
-                #TODO: testaa uudestaan toimiiko
                 #Should have something in either of these
                 if not is_empty(out_file):
                     output = open(out_file, 'r')
-		    message = output.read()
-		    logging.debug("out:"+message)
-		    output.close()
+                    message = output.read()
+                    logging.debug("out:"+message)
+                    output.close()
                 else:
                     if not is_empty(err_file):
-			errput = open(err_file, 'r')
-                        error = errput.read()
-			errput.close()
+                        errput = open(err_file, 'r')
+                        error_message = errput.read()
+                        errput.close()
                     else:
-                        return HttpResponse("Oops! You shouldn't have gotten here!")
+                        logging.error("Both stdout and stderr files were empty")
+                        return redirect('error')
             else:
+                #TODO: Test this!
                 error_message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
-        
+        else:
+            logging.error("Form validation error")
+    #First time: No POST requests here
     else:
         form = EditorForm()
+        #Attempt to find student's code from previous visit
+        #TODO: Test this!
         code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name +\
                     '/' + request.user.username + '/student_code.py'
         if os.path.isfile(code_file):
@@ -159,17 +168,17 @@ def grade(request):
             code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + '/'\
                        + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
-	    test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
-		       + request.session['assignment_name'].replace(" ","_") + '/'
-	    logging.debug("Test_dir " + test_dir)
-            subprocess.call(["cp", test_dir + "/*", code_dir])
-            #Copy the entrypoint for docker to the shared volume
-            #subprocess.call(["cp", example_docker + "Dockerfile", test_dir])
+            test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
+               + request.session['assignment_name'].replace(" ","_") + '/'
+            logging.debug("Test_dir " + test_dir)
+            #subprocess.call(["cp", test_dir + "/*", code_dir])
+            subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
+            subprocess.call(["cp", example_docker + "Dockerfile", test_dir])
             description = imp.load_source('description', test_dir + 'description.py')
 
             results = []
             for test_name in description.tests:
-		test = imp.load_source('test', test_dir + test_name)
+                test = imp.load_source('test', test_dir + test_name)
                 result = None
                 if description.scale == "numeric":
                     result = NumericResult()
@@ -186,14 +195,14 @@ def grade(request):
 
                 if test.type == "compare_output":
                     test_result = diff_test(test, code_dir, test_dir, result)
-		    logging.debug(test_result['pass'])
+                    logging.debug("Test result: " + test_result)
                     #There was an error on test execution, student will not lose attempts
-                    if test_result['pass'] == "error":
-                        logging.error(test_result['message'])
+                    if test_result.passed == "error":
+                        logging.error(test_result.message)
                         return redirect('error')
-                    elif test_result['pass'] == "yes":
+                    elif test_result.passed == "yes":
                         logging.debug("Pass")
-			#If assignment.attempts > 0, then the number of attempts is limited
+                        #If assignment.attempts > 0, then the number of attempts is limited
                         if assignment.attempts > 0:
                             user_attempts.attempts = attempts_left - 1
                             user_attempts.save()
@@ -206,22 +215,25 @@ def grade(request):
                             result.passed = True
                     #Didn't pass!
                     else:
+                        logging.debug("Da No Pass")
+                        #Assignment attempts were limited
                         if assignment.attempts > 0:
                             user_attempts.attempts = attempts_left - 1
                             user_attempts.save()
-                        logging.debug("Da No Pass")
+
+                        #Depending on the scale used, give some results
                         if description.scale == "numeric":
                             result.type = "numeric"
                             result.score = 0
-			    result.max_score = test.points
+                            result.max_score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
                             result.passed = False
 
-                        if test_result['message'] == "unequal":
+                        if test_result.message == "unequal":
                             result.feedback = test.test_results[0]
 
-		    result.save()
+                result.save()
 
         return render(request, "grade/results.html",
         {
