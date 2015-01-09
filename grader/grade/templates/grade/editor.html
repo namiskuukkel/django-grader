@@ -25,7 +25,6 @@
     <p>Olet käyttänyt kaikki yrityskertasi! </p>
     {% endif %}
     <!--End of exceptional situations-->
-
     <h1>{{assignment.name}}</h1>
     <p>{{assignment.description}}</p>
 
@@ -36,14 +35,19 @@
     {% else %}
     <!-- Much attempts. Over 9000. Wow. -->
     {% endif %}
-    {{error}}
-    {{message}}
+    {{error|linebreaks}}
+    <div id="result">{{message|linebreaks}}</div>
     <form id="code_area" action="" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     </form>
     <button type="button" onclick="run()">Aja</button>
-    <button type="button" onclick="grade()">Testaa arvostelijalla</button>
+    {% if attempts_left == 0 %}
+    	<button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
+    {% else %}
+	<button type="button" onclick="grade()">Testaa arvostelijalla</button>
+    {% endif %}
+
 
 </body>
 </html>

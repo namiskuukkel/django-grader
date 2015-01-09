@@ -90,8 +90,9 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+from top_secret_settings import TOP_SECRET_KEY
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'qsv)jfxl&amp;333wct61=0l=b87f)5r8z02hhmovnl(*f(n+3wr&amp;&amp;'
+SECRET_KEY = TOP_SECRET_KEY
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -134,7 +135,7 @@ INSTALLED_APPS = (
     'LTI',
 
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )

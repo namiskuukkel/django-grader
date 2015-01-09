@@ -75,8 +75,9 @@ def code(request):
                 build_err = open('/var/log/grader/docker_error_student', 'w')
 
                 #TODO: tää kans tappolistalle
-                subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
+                p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
                                      stdout=build_out, stderr=build_err)
+		p.communicate()
             except:
                 logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
                 if build_out not in locals()or build_err not in locals():
@@ -93,7 +94,8 @@ def code(request):
                 #Should have something in either of these
                 if not is_empty(out_file):
                     output = open(out_file, 'r')
-                    message = output.read()
+		    for line in output:
+			message += line + '\n'
                     logging.debug("out:"+message)
                     output.close()
                 else:
@@ -141,13 +143,14 @@ def grade(request):
         error_message = ""
         assignment_name = request.session['assignment_name']
         course_name = request.session['course_name']
-        attempts_left = 0
+
         try:
             assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
         except Exception as e:
             logging.error(template.format(type(e).__name__, e.args))
             return redirect('error')
 
+        attempts_left = 0	
         if assignment.attempts > 0:
             try:
                 user_attempts = UserAttempts.objects.get(user__username=request.user.username,
@@ -156,7 +159,15 @@ def grade(request):
                 attempts_left = user_attempts.attempts
                 if attempts_left == 0:
                     return HttpResponse("Olet jo käyttänyt kaikki yrityskertasi")
-
+            except UserAttempts.DoesNotExist:
+            	#User is trying this for the first time, create new db object that connects the user object to amount of
+            	#attempts the user has left to try this assignment
+            	to_add = UserAttempts()
+            	to_add.user = request.user
+            	to_add.assignment = assignment
+            	to_add.attempts = assignment.attempts
+            	attempts_left = assignment.attempts
+            	to_add.save()
             except Exception as e:
                 logging.error(template.format(type(e).__name__, e.args))
                 return redirect('error')
@@ -195,12 +206,13 @@ def grade(request):
 
                 if test.type == "compare_output":
                     test_result = diff_test(test, code_dir, test_dir, result)
-                    logging.debug("Test result: " + test_result)
+                    logging.debug(', '.join([' : '.join((k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
+		    
                     #There was an error on test execution, student will not lose attempts
-                    if test_result.passed == "error":
-                        logging.error(test_result.message)
+                    if test_result['passed'] == "error":
+                        logging.error(test_result['message'])
                         return redirect('error')
-                    elif test_result.passed == "yes":
+                    elif test_result['passed'] == "yes":
                         logging.debug("Pass")
                         #If assignment.attempts > 0, then the number of attempts is limited
                         if assignment.attempts > 0:
@@ -209,6 +221,7 @@ def grade(request):
 
                         if description.scale == "numeric":
                             result.type = "numeric"
+			    result.score = test.points
                             result.max_score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
@@ -230,21 +243,33 @@ def grade(request):
                             result.type = "pass"
                             result.passed = False
 
-                        if test_result.message == "unequal":
+                        if test_result['message'] == "unequal":
                             result.feedback = test.test_results[0]
 
                 result.save()
+		results.append(result)
+	    scored_points = 0
+	for result in results:
+	    scored_points += result.score
+            logging.debug("Code: " + result.student_result)
+	success = False
+	if scored_points >= description.points_required:
+	    success = True	    
 
         return render(request, "grade/results.html",
         {
-            "course": course_name,
             "assignment_name": assignment_name,
-            "now": datetime.now(),
             "message": message,
             "error": error_message,
-            "attempts_left": attempts_left
-        })
-
+            "attempts_left": attempts_left,
+            "results": results,
+	    "scored_points": scored_points,
+	    "total_points": description.total_points,
+	    "success": True,
+	})
+    #Not POST
+    else:
+	return HttpResponse("Eipäs kurkita!")
 
 def error(request):
     return render(request, "grade/error.html", {})

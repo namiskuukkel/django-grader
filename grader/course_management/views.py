@@ -37,7 +37,7 @@ def add_course(request):
     if not request.user.is_superuser:
         return PermissionDenied()
 
-    if request.method == 'POST':
+    '''if request.method == 'POST':
         if form.is_valid():
 	    form = CourseForm(request.POST)
             # Check if there is an ending slash on the student code directory name
@@ -56,17 +56,18 @@ def add_course(request):
             return redirect('/manage/')
         else:
             return HttpResponse("Örrr")
-        '''# Fetch from Canvas version
+'''
+        # Fetch from Canvas version
     if request.method == 'POST':
         form = CourseForm(request.POST)
 
-        r = requests.get('https://mooc-dev.pit.cs.tut.fi/login/oauth2/auth',
+        r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
                                 headers={'client_id': client_id, 'response_type': 'code',
                                          'redirect_uri': redirect_uri})
-
-        response = requests.get('https://canvas.instructure.com/api/v1/courses/' + id,
-                                headers={'Authorization': 'Bearer ' + r['code']})
-
+	token = "S49NA8uhdSErDKowppyGf2iNxmxply2xO4GKIhYyg0NNZtkycbMabX6VcHzwp86P"
+        response = requests.get('https://mooc.tut.fi/api/v1/courses/1',
+                                headers={'Authorization': 'Bearer ' + token})
+	logging.debug(response)
         data = json.loads(response)
         course = data['name']
         to_add = Course()
@@ -85,7 +86,7 @@ def add_course(request):
             assignment_dir = assignment_dir + '/'
             course.assignment_base_dir = assignment_dir
             course.save()
-        return redirect('/manage/')'''
+        return redirect('/manage/')
 
     else:
         course = None

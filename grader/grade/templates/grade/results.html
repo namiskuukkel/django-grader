@@ -6,7 +6,7 @@
 </head>
 <body>
 
-    <h1>{{assignment.name}}</h1>
+    <h1>{{assignment_name}}</h1>
     <h2>{{scored_points}}/{{total_points}}</h2>
 
     {% if success == True %}
@@ -17,7 +17,10 @@
 
     {% for result in results %}
     <h3>{{result.test_name}}</h3>
-
+    <p>{{result.description}}</p>
+    <p>Oma koodisi tuotti:</p>
+    <textarea>{{result.student_result}}</textarea>
+    <p>{{result.feedback}}</p>
     {% endfor %}
 
     {% if attempts_left == 0 %}

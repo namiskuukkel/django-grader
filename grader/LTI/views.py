@@ -61,7 +61,7 @@ def launch_lti(request):
         if settings.LTI_DEBUG: print "Email wasn't found in post"
         raise PermissionDenied()
     
-    """ GET OR CREATE NEW USER AND LTI_PROFILE """
+    """ GET OR CREATE NEW USER """
     lti_username = email #create username with email and user_id
     try:
         """ Check if user already exists using email, if not create new """    

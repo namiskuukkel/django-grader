@@ -15,8 +15,9 @@ def diff_test(test, code_dir, test_dir, result):
         err = open('/var/log/grader/docker_error_student', 'w')
 
         #TODO: tää kans tappolistalle
-        subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
-                         stdout=out, stderr=err)
+        p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
+                             stdout=out, stderr=err)
+	p.communicate()
     except:
         logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
         return {"pass": "error",
@@ -94,8 +95,9 @@ def diff_test(test, code_dir, test_dir, result):
             err = open('/var/log/grader/example_error_docker', 'w')
 
             #TODO: tää kans tappolistalle
-            subprocess.Popen(['sudo', 'docker', 'build', '-t', 'example_image', test_dir],
-                             stdout=out, stderr=err)
+            p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'example_image', test_dir],
+                                 stdout=out, stderr=err)
+	    p.communicate()
         except:
             logging.error(
                 "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
@@ -112,7 +114,8 @@ def diff_test(test, code_dir, test_dir, result):
 
                 #Should have something in either of these
                 if is_empty(expected_file):
-                    if is_empty(error_file):
+                    logging.debug("expected empty")
+		    if is_empty(error_file):
                         return {"passed": "error",
                                 "message": "Docker wrote no results!"}
                     else:
@@ -134,4 +137,7 @@ def diff_test(test, code_dir, test_dir, result):
     logging.debug(expected_read + ' vs ' + result.student_result)
     if expected_read != result.student_result:
         return {"passed": "no",
+                "message": "unequal"}
+    else:
+	return {"passed": "yes",
                 "message": "unequal"}
