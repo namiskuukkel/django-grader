@@ -9,7 +9,7 @@ logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 
 def diff_test(test, code_dir, test_dir, result):
-    # STUDENT PART
+    ################### STUDENT PART ##########################
     try:
         out = open('/var/log/grader/docker_success_student', 'w')
         err = open('/var/log/grader/docker_error_student', 'w')
@@ -17,7 +17,7 @@ def diff_test(test, code_dir, test_dir, result):
         #TODO: tää kans tappolistalle
         p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
                              stdout=out, stderr=err)
-	p.communicate()
+        p.communicate()
     except:
         logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
         return {"pass": "error",
@@ -28,20 +28,22 @@ def diff_test(test, code_dir, test_dir, result):
     out_file = code_dir + test.name.replace(" ", "_") + '_student_result.txt'
     err_file = code_dir + test.name.replace(" ", "_") + '_student_error.txt'
 
+    #We do not want any old stuff to exist at this point, e.g. error file not empty because of previous run
+    if os.path.isfile(out_file):
+        os.remove(out_file)
+    if os.path.isfile(out_file):
+        os.remove(err_file)
+
     try:
         if run(code_dir, "student_image", out_file, err_file, test.timeout):
             #Should have something in either of these
             if not is_empty(out_file):
-                out = open(out_file, 'r')
-                result.student_result = out.read()
+                result.student_result = read_by_line(out_file)
                 #result.save()
-                out.close()
             else:
                 if not is_empty(err_file):
-                    err = open(err_file, 'r')
-                    result.student_result = err.read()
+                    result.student_result = read_by_line(err_file)
                     result.feedback = "Koodisi tuotti virheen."
-                    err.close()
                     #result.save()
                     return {"passed": "no",
                             "message": "error"}
@@ -60,15 +62,7 @@ def diff_test(test, code_dir, test_dir, result):
         return {"passed": "error",
                 "message": "Error running docker"}
 
-    #Remove the old files so you can be sure that there are no left overs on the next run
-    try:
-        os.remove(out_file)
-        os.remove(err_file)
-    except:
-        return {"passed": "error",
-                "message": "Failed to remove result files"}
-
-    #EXAMPLE PART
+    ###########################EXAMPLE PART##########################
     needs_running = True
     try:
         example_age = os.path.getmtime(test_dir + "example.py")
@@ -97,10 +91,10 @@ def diff_test(test, code_dir, test_dir, result):
             #TODO: tää kans tappolistalle
             p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'example_image', test_dir],
                                  stdout=out, stderr=err)
-	    p.communicate()
+            p.communicate()
         except:
-            logging.error(
-                "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+            logging.error("Koodin ajoympäristöä ei voitu käynnistää."
+                          "Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
             return {"passed": "error",
                     "message": "Error building example docker."}
         out.close()
@@ -111,17 +105,14 @@ def diff_test(test, code_dir, test_dir, result):
         try:
             logging.debug("Test_dir " + test_dir)
             if run(test_dir, "example_image", expected_file, error_file, test.timeout):
-
                 #Should have something in either of these
                 if is_empty(expected_file):
                     logging.debug("expected empty")
-		    if is_empty(error_file):
+                    if is_empty(error_file):
                         return {"passed": "error",
                                 "message": "Docker wrote no results!"}
                     else:
-                        example_err = open(error_file, 'r')
-                        logging.error("Example produced: " + example_err.read())
-                        example_err.close()
+                        logging.error("Example produced: " + read_by_line(error_file))
                         return {"passed": "error",
                                 "message": "Example code produced an error"}
             else:
@@ -131,13 +122,11 @@ def diff_test(test, code_dir, test_dir, result):
             return {"passed": "error",
                     "message": "Error running example docker"}
 
-    expected = open(expected_file, 'r')
-    expected_read = expected.read()
-    expected.close()
-    logging.debug(expected_read + ' vs ' + result.student_result)
-    if expected_read != result.student_result:
+    expected = read_by_line(expected_file)
+    logging.debug(expected + ' vs ' + result.student_result)
+    if expected != result.student_result:
         return {"passed": "no",
                 "message": "unequal"}
     else:
-	return {"passed": "yes",
+        return {"passed": "yes",
                 "message": "unequal"}

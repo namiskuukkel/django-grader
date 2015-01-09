@@ -1,0 +1,21 @@
+body {
+	background-color: #000000;
+}
+#header {
+	clear: both;
+}
+#code_area {
+	float: left;
+}
+#error {
+	color: red;
+	float: right;
+}
+#result {
+	float: right;
+}
+#warning {
+	color: orange;
+}
+
+

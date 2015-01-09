@@ -137,3 +137,12 @@ def is_empty(file):
         return True
     else:
         return False
+
+def read_by_line(file):
+    message = ""
+    output = open(file, 'r')
+    for line in output:
+        message += line + '\n'
+        logging.debug("out:"+message)
+    output.close()
+    return message

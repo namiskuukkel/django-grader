@@ -77,7 +77,7 @@ def code(request):
                 #TODO: tää kans tappolistalle
                 p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
                                      stdout=build_out, stderr=build_err)
-		p.communicate()
+                p.communicate()
             except:
                 logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
                 if build_out not in locals()or build_err not in locals():
@@ -93,16 +93,10 @@ def code(request):
             if run(code_dir, "student_image", out_file, err_file, timeout):
                 #Should have something in either of these
                 if not is_empty(out_file):
-                    output = open(out_file, 'r')
-		    for line in output:
-			message += line + '\n'
-                    logging.debug("out:"+message)
-                    output.close()
+                    message = read_by_line(out_file)
                 else:
                     if not is_empty(err_file):
-                        errput = open(err_file, 'r')
-                        error_message = errput.read()
-                        errput.close()
+                        error_message = read_by_line(err_file)
                     else:
                         logging.error("Both stdout and stderr files were empty")
                         return redirect('error')
@@ -116,11 +110,11 @@ def code(request):
         form = EditorForm()
         #Attempt to find student's code from previous visit
         #TODO: Test this!
-        code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name +\
+        code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name.replace(" ","_") +\
                     '/' + request.user.username + '/student_code.py'
+        logging.debug("Old code loc " + code_file)
         if os.path.isfile(code_file):
-            f = open(code_file, 'r')
-            form.text = f.read()
+            form.text = read_by_line(code_file)
 
     return render(request, "grade/editor.html",
                   {
@@ -160,14 +154,14 @@ def grade(request):
                 if attempts_left == 0:
                     return HttpResponse("Olet jo käyttänyt kaikki yrityskertasi")
             except UserAttempts.DoesNotExist:
-            	#User is trying this for the first time, create new db object that connects the user object to amount of
-            	#attempts the user has left to try this assignment
-            	to_add = UserAttempts()
-            	to_add.user = request.user
-            	to_add.assignment = assignment
-            	to_add.attempts = assignment.attempts
-            	attempts_left = assignment.attempts
-            	to_add.save()
+                #User is trying this for the first time, create new db object that connects the user object to amount of
+                #attempts the user has left to try this assignment
+                to_add = UserAttempts()
+                to_add.user = request.user
+                to_add.assignment = assignment
+                to_add.attempts = assignment.attempts
+                attempts_left = assignment.attempts
+                to_add.save()
             except Exception as e:
                 logging.error(template.format(type(e).__name__, e.args))
                 return redirect('error')
@@ -207,7 +201,7 @@ def grade(request):
                 if test.type == "compare_output":
                     test_result = diff_test(test, code_dir, test_dir, result)
                     logging.debug(', '.join([' : '.join((k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
-		    
+
                     #There was an error on test execution, student will not lose attempts
                     if test_result['passed'] == "error":
                         logging.error(test_result['message'])
@@ -221,7 +215,7 @@ def grade(request):
 
                         if description.scale == "numeric":
                             result.type = "numeric"
-			    result.score = test.points
+                            result.score = test.points
                             result.max_score = test.points
                         elif description.scale == "pass":
                             result.type = "pass"
@@ -247,14 +241,16 @@ def grade(request):
                             result.feedback = test.test_results[0]
 
                 result.save()
-		results.append(result)
-	    scored_points = 0
-	for result in results:
-	    scored_points += result.score
+                results.append(result)
+
+        scored_points = 0
+        for result in results:
+            scored_points += result.score
             logging.debug("Code: " + result.student_result)
-	success = False
-	if scored_points >= description.points_required:
-	    success = True	    
+
+        success = False
+        if scored_points >= description.points_required:
+            success = True
 
         return render(request, "grade/results.html",
         {
@@ -263,13 +259,13 @@ def grade(request):
             "error": error_message,
             "attempts_left": attempts_left,
             "results": results,
-	    "scored_points": scored_points,
-	    "total_points": description.total_points,
-	    "success": True,
-	})
+        "scored_points": scored_points,
+        "total_points": description.total_points,
+        "success": True,
+        })
     #Not POST
     else:
-	return HttpResponse("Eipäs kurkita!")
+        return HttpResponse("Eipäs kurkita!")
 
 def error(request):
     return render(request, "grade/error.html", {})

@@ -12,42 +12,49 @@
             $('#code_area').attr('action', "/grader/grade/").submit();
         }
     </script>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
     <!--The following lines result in the editor not loading-->
     {% if assignment.open_from and now < assignment.open_from %}
-    <p>This exercise isn't open yet!</p>
+        <p>This exercise isn't open yet!</p>
     {% elif assignment.open_till and now >= assignment.open_till %}
-    <p>This exercise has closed!</p>
-    {% endif %}
-
-    {% if attempts_left == 0 %}
-    <p>Olet käyttänyt kaikki yrityskertasi! </p>
-    {% endif %}
-    <!--End of exceptional situations-->
-    <h1>{{assignment.name}}</h1>
-    <p>{{assignment.description}}</p>
-
-    {% if attempts_left == 1 %}
-    <p>Sinulla on vain YKSI yrityskerta jäljellä! </p>
-    {% elif attempts_left != 9999 %}
-    <p>Sinulla on {{attempts_left}} yrityskertaa jäljellä </p>
+        <p>This exercise has closed!</p>
     {% else %}
-    <!-- Much attempts. Over 9000. Wow. -->
-    {% endif %}
-    {{error|linebreaks}}
-    <div id="result">{{message|linebreaks}}</div>
-    <form id="code_area" action="" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    </form>
-    <button type="button" onclick="run()">Aja</button>
-    {% if attempts_left == 0 %}
-    	<button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
-    {% else %}
-	<button type="button" onclick="grade()">Testaa arvostelijalla</button>
-    {% endif %}
+        {% if attempts_left == 0 %}
+        <p>Olet käyttänyt kaikki yrityskertasi! </p>
+        {% endif %}
+        <!--End of exceptional situations-->
+        <div id="header"><h1>{{assignment.name}}</h1></div>
+        <h1>{{assignment.name}}</h1>
+        <p>{{assignment.description}}</p>
 
+        {% if attempts_left == 1 %}
+        <div id="warning"><p>Sinulla on vain YKSI yrityskerta jäljellä! </p></div>
+        {% elif attempts_left != 9999 %}
+        <p>Sinulla on {{attempts_left}} yrityskertaa jäljellä </p>
+        {% else %}
+        <!-- Much attempts. Over 9000. Wow. -->
+        {% endif %}
+
+        <div id="error">
+            {{error|linebreaks}}
+        </div>
+        <div id="result">
+            {{message|linebreaks}}
+        </div>
+
+        <form id="code_area" action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        </form>
+        <button type="button" onclick="run()">Aja</button>
+        {% if attempts_left == 0 %}
+            <button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
+        {% else %}
+        <button type="button" onclick="grade()">Testaa arvostelijalla</button>
+        {% endif %}
+    {% endif %}
 
 </body>
 </html>
