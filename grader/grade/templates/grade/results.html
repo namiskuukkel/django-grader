@@ -3,6 +3,16 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Arvostelun tulokset</title>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script>
+        function run() {
+            $('#code_area').attr('action', "/grader/code/").submit();
+        }
+        function grade() {
+            //TODO: send to tool_consumer_instance_url
+        }
+</script>
 </head>
 <body>
 
@@ -23,20 +33,6 @@
     <p>{{result.feedback}}</p>
     {% endfor %}
 
-    {% if attempts_left == 0 %}
-    <p>Olet käyttänyt kaikki yrityskertasi! </p>
-    {% endif %}
-
-    <h1>{{assignment.name}}</h1>
-    <p>{{assignment.description}}</p>
-
-    {% if attempts_left == 1 %}
-    <p>Sinulla on vain YKSI yrityskerta jäljellä! </p>
-    {% elif attempts_left != 9999 %}
-    <p>Sinulla on {{attempts_left}} yrityskertaa jäljellä </p>
-    {% else %}
-    <!-- Much attempts. Over 9000. Wow. -->
-    {% endif %}
     <button type="button" onclick="run()">Yritä uudestaan</button>
     <button type="button" onclick="return_to_canvas()">Palaa Canvakseen</button>
 </body>
