@@ -1,0 +1,43 @@
+body {
+	background-image: url('http://th08.deviantart.net/fs36/PRE/f/2008/288/3/7/Textures___Snake_Skin_by_Loo_Lee.jpg');
+	opacity: 0.4;
+}
+#content {
+	background-color: white;
+	font-family: 'PT Mono', ;
+	width: 90%;
+	opacity: 0.8;
+	margin-left: auto ;
+  	margin-right: auto ;
+}
+#header {
+	clear: both;
+	color: green;
+	text-align: center;
+}
+#directions {
+	clear: both;
+        color: green;
+        text-align: center;
+}
+
+#code {
+	float: left;
+	width: 49%;
+}
+#error {
+	color: red;
+	float: right;
+	text-align: left;
+	width: 49%;
+}
+#result {
+	float: right;
+	text-align: left;
+	width: 30%;
+}
+#warning {
+	color: orange;
+}
+
+
