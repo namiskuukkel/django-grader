@@ -8,7 +8,7 @@ from django.utils.safestring import mark_safe
 
 
 class AceWidget(forms.Textarea):
-    def __init__(self, mode=None, theme=None, wordwrap=False, width="500px", height="300px", *args, **kwargs):
+    def __init__(self, mode=None, theme=None, wordwrap=False, width="575px", height="350px", *args, **kwargs):
         self.mode = mode
         self.theme = theme
         self.wordwrap = wordwrap
