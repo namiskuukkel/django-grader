@@ -1,0 +1,42 @@
+body {
+	background-color: black;
+	font-family: 'Cutive Mono', ;
+}
+#content {
+	background-color: white;
+	width: 90%;
+	opacity: 0.8;
+	margin-left: auto ;
+  	margin-right: auto ;
+}
+#header {
+	clear: both;
+	color: green;
+	text-align: center;
+}
+#directions {
+	clear: both;
+        color: green;
+        text-align: center;
+}
+
+#code {
+	float: left;
+	width: 49%;
+}
+#error {
+	color: red;
+	float: right;
+	text-align: left;
+	width: 45%;
+}
+#result {
+	float: right;
+	text-align: left;
+	width: 45%;
+}
+#warning {
+	color: orange;
+}
+
+

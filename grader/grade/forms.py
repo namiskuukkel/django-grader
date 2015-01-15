@@ -5,7 +5,7 @@ from django import forms
 from django_ace import AceWidget
 
 class EditorForm(forms.Form):
-    text = forms.CharField(widget=AceWidget(mode='python', theme='monokai'),label="Koodaa!")
+    text = forms.CharField(widget=AceWidget(mode='python', theme='GitHub'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]

@@ -1,16 +1,33 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
 from django.db import models
 from course_management.models import Assignment
 from django.contrib.auth.models import User
 
+#TODO: Siirrä näitä testi olioihin
 class TestResult(models.Model):
-    assignment_name = course = models.ForeignKey(Assignment, related_name='assignment_name')
-    user = models.ForeignKey(User, related_name='user')
-    score = models.SmallIntegerField()
-    max_score = models.SmallIntegerField()
+    type = models.TextField()
+    test_name = models.TextField()
+    description = models.TextField()
     student_result = models.TextField(blank=True)
     feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        abstract = True
+
+class NumericResult(TestResult):
+    assignment = models.ForeignKey(Assignment, related_name='numeric_assignment')
+    user = models.ForeignKey(User, related_name='numeric_student')
+    score = models.SmallIntegerField()
+    max_score = models.SmallIntegerField()
+
+class BinaryResult(TestResult):
+    #Dublicates are due to reverse name clash errors
+    assignment = models.ForeignKey(Assignment, related_name='binary_assignment')
+    user = models.ForeignKey(User, related_name='binary_student')
+    passed = models.BooleanField()
 
 class Snippet(models.Model):
     text = models.TextField()

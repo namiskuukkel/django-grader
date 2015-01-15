@@ -61,7 +61,7 @@ def launch_lti(request):
         if settings.LTI_DEBUG: print "Email wasn't found in post"
         raise PermissionDenied()
     
-    """ GET OR CREATE NEW USER AND LTI_PROFILE """
+    """ GET OR CREATE NEW USER """
     lti_username = email #create username with email and user_id
     try:
         """ Check if user already exists using email, if not create new """    
@@ -88,7 +88,7 @@ def launch_lti(request):
     request.session['assignment_name'] = assignment
     request.session['outcome'] = outcome_url
 
-    return HttpResponseRedirect('/grader/')
+    return HttpResponseRedirect('/grader/code/')
     
 def login_info(request):
     return HttpResponse('This webpage must be entered via a LMS')

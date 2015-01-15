@@ -6,7 +6,7 @@ from course_management.models import Course
 from django.http import HttpResponse
 from django.core.files import File
 import subprocess, threading, os
-
+from docker_settings import *
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 def save_code(course_name, assignment_name, username, code):
@@ -64,7 +64,7 @@ def save_code(course_name, assignment_name, username, code):
     except:
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"'''
 
-def build_docker(type):
+def build_docker(type, folder):
 
     logging.info("Building image")
 
@@ -75,11 +75,9 @@ def build_docker(type):
     if type == "student":
         image = "student_image"
         #HARDCODED
-        folder = "/home/docker/Student-Docker/"
     elif type == "example":
         image = "example_image"
         #HARDCODED
-        folder = "/home/docker/Example-Docker/"
     else:
         return "Unknown docker type"
 
@@ -88,21 +86,22 @@ def build_docker(type):
         p = subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
         #Wait for the previous image to be removed before continuing
         p.communicate()
-        #TODO: tää kans tappolistalle
+        
+	out = open('/var/log/grader/docker_success_' + type, 'w')
+        err = open('/var/log/grader/docker_error_' + type, 'w')
+
+	#TODO: tää kans tappolistalle
         subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if stdout:
-            logging.info(stdout)
-        if stderr:
-            logging.error(stderr)
+                                     stdout=out, stderr=err)
         return "ok"
     except:
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
 
-def run(code_dir, image, out, err, timeout):
+def run(code_dir, image, out_file, err_file, timeout):
     p = None
+    out = open(out_file, 'w')
+    err = open(err_file, 'w')
     def target():
         #Volume: Share a folder with Docker container; 'folder_to_share':'folder_in_docker'
         #-w, working directory: Define working directory on Docker container
@@ -121,14 +120,29 @@ def run(code_dir, image, out, err, timeout):
     if thread.is_alive():
         p.terminate()
         thread.join()
+	out.close()
+	err.close()
         return False
+    out.close()
+    err.close()
     return True
 
-def is_empty(stream):
+def is_empty(file):
+    stream = open(file, 'r')
     stream.seek(0)
     #Check if the code run was succesful
     first_char = stream.read(1) #get the first character
+    stream.close()
     if not first_char:
         return True
     else:
         return False
+
+def read_by_line(file):
+    message = ""
+    output = open(file, 'r')
+    for line in output:
+        message += line + '\n'
+        logging.debug("out:"+message)
+    output.close()
+    return message

@@ -13,6 +13,7 @@ import json
 from .forms import *
 import os
 import logging
+from grader.top_secret_canvas_client_settings import *
 
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
@@ -36,10 +37,9 @@ def add_course(request):
     if not request.user.is_superuser:
         return PermissionDenied()
 
-    if request.method == 'POST':
-        form = CourseForm(request.POST)
+    '''if request.method == 'POST':
         if form.is_valid():
-            form.save()
+	    form = CourseForm(request.POST)
             # Check if there is an ending slash on the student code directory name
             # If not, add one and save that to database
             course = Course.objects.get(name=request.session['course_name'])
@@ -56,23 +56,38 @@ def add_course(request):
             return redirect('/manage/')
         else:
             return HttpResponse("Örrr")
+'''
         # Fetch from Canvas version
-        '''id = request.POST['course_id']
-        if not id:
-            return HttpResponse("No course id provided!")
-        elif not request.POST['email']:
-            return HttpResponse("No contact email provided!")
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
 
-        response = requests.get('https://canvas.instructure.com/api/v1/courses/' + id)
-        return HttpResponse(response)
-
+        r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
+                                headers={'client_id': client_id, 'response_type': 'code',
+                                         'redirect_uri': redirect_uri})
+	token = "S49NA8uhdSErDKowppyGf2iNxmxply2xO4GKIhYyg0NNZtkycbMabX6VcHzwp86P"
+        response = requests.get('https://mooc.tut.fi/api/v1/courses/1',
+                                headers={'Authorization': 'Bearer ' + token})
+	logging.debug(response)
         data = json.loads(response)
         course = data['name']
         to_add = Course()
         to_add.id = id
         to_add.name = course
         to_add.contact = request.POST['email']
-        return redirect('/')'''
+        to_add.save()
+
+        student_dir = course.student_code_dir
+        assignment_dir = course.assignment_base_dir
+        if not student_dir[-1:] == '/':
+            student_dir = student_dir + '/'
+            course.student_code_dir = student_dir
+            course.save()
+        if not assignment_dir[-1:] == '/':
+            assignment_dir = assignment_dir + '/'
+            course.assignment_base_dir = assignment_dir
+            course.save()
+        return redirect('/manage/')
+
     else:
         course = None
         form = CourseForm()
