@@ -14,3 +14,10 @@ class EditorForm(forms.Form):
             if banned in value:
                 raise forms.ValidationError("Bannattu!")
         return value
+
+class AvatarProfileForm(EditorForm):
+
+    profile_avatar = forms.ImageField()
+
+    class Meta(ProfileForm.Meta):
+        fields = ProfileForm.Meta.fields + ['profile_avatar']

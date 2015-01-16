@@ -1,0 +1,8 @@
+grader/Logs/grader.log
+html/
+*.pyc
+.gitignore
+grader/.idea/workspace.xml
+/.idea/workspace.xml
+.idea
+/grader/grader/top_secret_settings.py

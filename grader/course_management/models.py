@@ -32,6 +32,7 @@ class Assignment(models.Model):
     # 0 attempts allowed equals to infinite attempts
     attempts = models.PositiveSmallIntegerField(default=0)
     execution_timeout = models.PositiveIntegerField(default=30)
+    parameter_injection = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (("name", "course"),)
@@ -44,3 +45,8 @@ class UserAttempts(models.Model):
     user = models.ForeignKey(User, related_name='user')
     assignment = models.ForeignKey(Assignment, related_name='assignment')
     attempts = models.SmallIntegerField()
+
+class Paramater(models.Model):
+    assignment = models.ForeignKey(Assignment, related_name='assignment')
+    parameter_name = models.TextField()
+    type = models.TextField(blank=True)

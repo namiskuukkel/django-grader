@@ -25,17 +25,21 @@ body {
 	width: 49%;
 }
 #error {
-	color: red;
+
 	float: right;
 	text-align: left;
 	width: 45%;
 }
+
 #result {
 	float: right;
 	text-align: left;
 	width: 45%;
 }
-#warning {
+.error {
+    color: red;
+}
+.warning {
 	color: orange;
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-tests = ['test1', 'test2']
+tests = ['test1']
 success = "Jee, hyvin meni!"
 #scale = "pass"
 #passes_required = 17

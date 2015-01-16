@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
+    <style>
+      body {
+        font-family: 'Cutive Mono', serif;
+      }
+    </style>
+    <title>{{course}}</title>
+    {{ form.media }}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script>
+        function run() {
+            $('#code_area').attr('action', "/grader/code/").submit();
+        }
+        function grade() {
+            $('#code_area').attr('action', "/grader/grade/").submit();
+        }
+    </script>
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static "style.css" %}">
+</head>
+<body>
+    <!--The following lines result in the editor not loading-->
+    {% if assignment.open_from and now < assignment.open_from %}
+        <p>This exercise isn't open yet!</p>
+    {% elif assignment.open_till and now >= assignment.open_till %}
+        <p>This exercise has closed!</p>
+    {% else %}
+	<div id="content">
+		<div id="directions">
+		        <!--End of exceptional situations-->
+		        <div id="header"><h1>{{assignment.name}}</h1></div>
+		        <p>{{assignment.description}}</p>
+		</div>
+        {% if attempts_left %}
+            <div id="attempts">
+                {% if attempts_left == 1 %}
+                    <p class="warning">Sinulla on vain YKSI yrityskerta jäljellä! </p>
+                {% elif attempts_left == 0 %}
+                    <p>Sinulla on <b>{{attempts_left}}</b> yrityskertaa jäljellä </p>
+                {% else %}
+                    <p class="error">Olet käyttänyt kaikki yrityskertasi! </p>
+                {% endif %}
+            </div>
+        </div>
+	
+		<div id="play-area">
+		        <div id="result">
+                    <!--There shouldn't be an error and a message at the same time but just in case of faults... -->
+                    {% if error != "" %}
+		                <p class="error">{{error|linebreaks}}</p>
+                    {% endif %}
+                    {% if message != "" %}
+		                <p>{{message|linebreaks}}</p>
+                    {% endif %}
+		        </div>
+	
+			<div id="code">
+                    <form id="parameter1">
+                        s = <input type="text" name="var_value">
+                    </form>
+			        <form id="code_area" action="" method="post">
+			        {% csrf_token %}
+			        {{ form.as_p }}
+			        </form>
+			        <button type="button" onclick="run()">Aja</button>
+			        {% if attempts_left && attempts_left == 0 %}
+			            <button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
+			            <p class="error">Olet käyttänyt kaikki yrityskertasi! </p>
+			        {% else %}
+			        <button type="button" onclick="grade()">Testaa arvostelijalla</button>
+			        {% endif %}
+			</div>
+		</div>
+	</div>
+    {% endif %}
+
+</body>
+</html>

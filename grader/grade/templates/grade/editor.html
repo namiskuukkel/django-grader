@@ -33,22 +33,28 @@
 		        <!--End of exceptional situations-->
 		        <div id="header"><h1>{{assignment.name}}</h1></div>
 		        <p>{{assignment.description}}</p>
-		
-		        {% if attempts_left == 1 %}
-		        <div id="warning"><p>Sinulla on vain YKSI yrityskerta jäljellä! </p></div>
-		        {% elif attempts_left != 9999 %}
-		        <p>Sinulla on <b>{{attempts_left}}</b> yrityskertaa jäljellä </p>
-		        {% else %}
-		        <!-- Much attempts. Over 9000. Wow. -->
-		        {% endif %}
 		</div>
+        {% if attempts_left %}
+            <div id="attempts">
+                {% if attempts_left == 1 %}
+                    <p class="warning">Sinulla on vain YKSI yrityskerta jäljellä! </p>
+                {% elif attempts_left == 0 %}
+                    <p>Sinulla on <b>{{attempts_left}}</b> yrityskertaa jäljellä </p>
+                {% else %}
+                    <p class="error">Olet käyttänyt kaikki yrityskertasi! </p>
+                {% endif %}
+            </div>
+        </div>
 	
 		<div id="play-area">
-		        <div id="error">
-		            <p>{{error|linebreaks}}</p>
-		        </div>
 		        <div id="result">
-		            <p>{{message|linebreaks}}</p>
+                    <!--There shouldn't be an error and a message at the same time but just in case of faults... -->
+                    {% if error != "" %}
+		                <p class="error">{{error|linebreaks}}</p>
+                    {% endif %}
+                    {% if message != "" %}
+		                <p>{{message|linebreaks}}</p>
+                    {% endif %}
 		        </div>
 	
 			<div id="code">
@@ -57,9 +63,9 @@
 			        {{ form.as_p }}
 			        </form>
 			        <button type="button" onclick="run()">Aja</button>
-			        {% if attempts_left == 0 %}
+			        {% if attempts_left && attempts_left == 0 %}
 			            <button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
-			            <p>Olet käyttänyt kaikki yrityskertasi! </p>
+			            <p class="error">Olet käyttänyt kaikki yrityskertasi! </p>
 			        {% else %}
 			        <button type="button" onclick="grade()">Testaa arvostelijalla</button>
 			        {% endif %}

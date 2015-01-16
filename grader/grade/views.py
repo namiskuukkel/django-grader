@@ -37,7 +37,7 @@ def code(request):
         #This error message should be as it is, as the site can't load properly without this parameter
         return HttpResponse("No assignment found!")
 
-    attempts_left = 9999
+    attempts_left = None
     #If assignment.attempts > 0, then the number of attempts is limited
     if assignment.attempts > 0:
         try:

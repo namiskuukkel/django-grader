@@ -14,6 +14,7 @@ from .forms import *
 import os
 import logging
 from grader.top_secret_canvas_client_settings import *
+from django.core.urlresolvers import resolve
 
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
@@ -37,9 +38,10 @@ def add_course(request):
     if not request.user.is_superuser:
         return PermissionDenied()
 
-    '''if request.method == 'POST':
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
         if form.is_valid():
-	    form = CourseForm(request.POST)
+            form = CourseForm(request.POST)
             # Check if there is an ending slash on the student code directory name
             # If not, add one and save that to database
             course = Course.objects.get(name=request.session['course_name'])
@@ -55,19 +57,25 @@ def add_course(request):
                 course.save()
             return redirect('/manage/')
         else:
-            return HttpResponse("Örrr")
-'''
+
+
         # Fetch from Canvas version
+'''@login_required
+def add_course(request):
+    if not request.user.is_superuser:
+        return PermissionDenied()
+
     if request.method == 'POST':
         form = CourseForm(request.POST)
 
-        r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
-                                headers={'client_id': client_id, 'response_type': 'code',
-                                         'redirect_uri': redirect_uri})
-	token = "S49NA8uhdSErDKowppyGf2iNxmxply2xO4GKIhYyg0NNZtkycbMabX6VcHzwp86P"
+        #TODO: hardcoded
+        '''r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
+                                headers={'client_id': 10000000000001 , 'response_type': 'code',
+                                         'redirect_uri': resolve(request.path_info).url_name})'''
+        token = "S49NA8uhdSErDKowppyGf2iNxmxply2xO4GKIhYyg0NNZtkycbMabX6VcHzwp86P"
         response = requests.get('https://mooc.tut.fi/api/v1/courses/1',
                                 headers={'Authorization': 'Bearer ' + token})
-	logging.debug(response)
+        logging.debug(response)
         data = json.loads(response)
         course = data['name']
         to_add = Course()
@@ -96,7 +104,7 @@ def add_course(request):
         "form": form,
         "user": request.user,
         "course": course,
-    })
+    })'''
 
 
 @login_required
@@ -106,6 +114,7 @@ def add_assignment(request):
 
     if request.method == 'POST':
         form = AssignmentForm(request.POST)
+        parameters = ""
         if form.is_valid():
             form.save()
             assignment_name = form.cleaned_data['name'].replace(" ", "_")
