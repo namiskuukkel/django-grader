@@ -127,6 +127,35 @@ def run(code_dir, image, out_file, err_file, timeout):
     err.close()
     return True
 
+def build_lms_response(sourcedGUID, score):
+    xml = '<?xml version = "1.0" encoding = "UTF-8"?>' \
+          '<imsx_POXEnvelopeRequest xmlns="http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0">' \
+          '<imsx_POXHeader>' \
+          '<imsx_POXRequestHeaderInfo>' \
+          '<imsx_version>V1.0</imsx_version>' \
+          '<imsx_messageIdentifier>%d</imsx_messageIdentifier>' \
+          '</imsx_POXRequestHeaderInfo>' \
+          '</imsx_POXHeader>' \
+          '<imsx_POXBody>' \
+          '<replaceResultRequest>' \
+          '<resultRecord>' \
+          '<sourcedGUID>' \
+          '<sourcedId>%s</sourcedId>' \
+          '</sourcedGUID>' \
+          '<result>' \
+          '<resultScore>' \
+          '<language>en</language>' \
+          '<textString>%f</textString>' \
+          '</resultScore>' \
+          '<resultData>' \
+          '<text>text data for canvas submission</text>' \
+          '</resultData>' \
+          '</result>' \
+          '</resultRecord>' \
+          '</replaceResultRequest>' \
+          '</imsx_POXBody>' \
+          '</imsx_POXEnvelopeRequest>', 1337, sourcedGUID, score
+
 def is_empty(file):
     stream = open(file, 'r')
     stream.seek(0)

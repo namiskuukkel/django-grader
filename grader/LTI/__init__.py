@@ -20,6 +20,5 @@ setconf('LTI_LAST_NAME','lis_person_name_family')
 setconf('LTI_EMAIL','lis_person_contact_email_primary')
 setconf('LTI_ROLES', 'roles')
 setconf('LTI_OUTCOME', 'lis_outcome_service_url')
-setconf('LOGIN_REDIRECT_URL', '/grade')
 
 

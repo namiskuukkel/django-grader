@@ -52,7 +52,7 @@ def launch_lti(request):
     email = get_lti_value(settings.LTI_EMAIL, tool_provider, encoding=encoding)
     roles = get_lti_value(settings.LTI_ROLES, tool_provider, encoding=encoding)
     #user_id = get_lti_value('user_id', tool_provider, encoding=encoding)
-    #course_id= get_lti_value('context_id', tool_provider, encoding=encoding)
+    lms_context= get_lti_value('context_id', tool_provider, encoding=encoding)
     course_name = get_lti_value('context_title', tool_provider, encoding=encoding)
     assignment = get_lti_value('resource_link_title', tool_provider, encoding=encoding)
     outcome_url = get_lti_value(settings.LTI_OUTCOME, tool_provider, encoding=encoding)
@@ -86,7 +86,9 @@ def launch_lti(request):
     login(request, user)
     request.session['course_name'] = course_name
     request.session['assignment_name'] = assignment
-    request.session['outcome'] = outcome_url
+    request.session['lms_context'] = lms_context
+    request.session['outcome_url'] = outcome_url
+    request.session['return_url'] = request.META.HTTP_REFERER
 
     return HttpResponseRedirect('/grader/code/')
     
