@@ -6,12 +6,14 @@ from course_management.models import Assignment, Course, UserAttempts
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+ import httplib2
 from .utils import *
 from .test_tools import *
 from .models import *
 from docker_settings import *
 import sys
 import imp
+from django.forms.formsets import formset_factory
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 template = "An exception of type {0} occured. Arguments:\n{1!r}"
@@ -37,6 +39,8 @@ def code(request):
         #This error message should be as it is, as the site can't load properly without this parameter
         return HttpResponse("No assignment found!")
 
+    if assignment.parameter_injection:
+        ParamaterFormSet = formset_factory(ColorForm, extra=0)
     attempts_left = None
     #If assignment.attempts > 0, then the number of attempts is limited
     if assignment.attempts > 0:
@@ -198,47 +202,47 @@ def grade(request):
                 result.user = request.user
                 #result.save()
 
+                test_result = None
                 if test.type == "compare_output":
                     test_result = diff_test(test, code_dir, test_dir, result)
                     logging.debug(', '.join([' : '.join((k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
+                    if test_result['message'] == "unequal":
+                        result.feedback = test.test_results[0]
 
-                    #There was an error on test execution, student will not lose attempts
-                    if test_result['passed'] == "error":
-                        logging.error(test_result['message'])
-                        return redirect('error')
-                    elif test_result['passed'] == "yes":
-                        logging.debug("Pass")
-                        #If assignment.attempts > 0, then the number of attempts is limited
-                        if assignment.attempts > 0:
-                            user_attempts.attempts = attempts_left - 1
-                            user_attempts.save()
+                #There was an error on test execution, student will not lose attempts
+                if test_result['passed'] == "error":
+                    logging.error(test_result['message'])
+                    return redirect('error')
+                elif test_result['passed'] == "yes":
+                    logging.debug("Pass")
+                    #If assignment.attempts > 0, then the number of attempts is limited
+                    if assignment.attempts > 0:
+                        user_attempts.attempts = attempts_left - 1
+                        user_attempts.save()
 
-                        if description.scale == "numeric":
-                            result.type = "numeric"
-                            result.score = test.points
-                            result.max_score = test.points
-                        elif description.scale == "pass":
-                            result.type = "pass"
-                            result.passed = True
-                    #Didn't pass!
-                    else:
-                        logging.debug("Da No Pass")
-                        #Assignment attempts were limited
-                        if assignment.attempts > 0:
-                            user_attempts.attempts = attempts_left - 1
-                            user_attempts.save()
+                    if description.scale == "numeric":
+                        result.type = "numeric"
+                        result.score = test.points
+                        result.max_score = test.points
+                    elif description.scale == "pass":
+                        result.type = "pass"
+                        result.passed = True
+                #Didn't pass!
+                else:
+                    logging.debug("Da No Pass")
+                    #Assignment attempts were limited
+                    if assignment.attempts > 0:
+                        user_attempts.attempts = attempts_left - 1
+                        user_attempts.save()
 
-                        #Depending on the scale used, give some results
-                        if description.scale == "numeric":
-                            result.type = "numeric"
-                            result.score = 0
-                            result.max_score = test.points
-                        elif description.scale == "pass":
-                            result.type = "pass"
-                            result.passed = False
-
-                        if test_result['message'] == "unequal":
-                            result.feedback = test.test_results[0]
+                    #Depending on the scale used, give some results
+                    if description.scale == "numeric":
+                        result.type = "numeric"
+                        result.score = 0
+                        result.max_score = test.points
+                    elif description.scale == "pass":
+                        result.type = "pass"
+                        result.passed = False
 
                 result.save()
                 results.append(result)
@@ -252,6 +256,12 @@ def grade(request):
         if scored_points >= description.points_required:
             success = True
 
+        http = httplib2.Http()
+        headers = {'Content-type': 'application/xml'}
+        response, content = http.request(request.session['outcome_url'], 'POST', headers=headers)
+
+        logging.debug("Response: " + response + " content: " + content)
+
         return render(request, "grade/results.html",
         {
             "assignment_name": assignment_name,
@@ -259,9 +269,9 @@ def grade(request):
             "error": error_message,
             "attempts_left": attempts_left,
             "results": results,
-        "scored_points": scored_points,
-        "total_points": description.total_points,
-        "success": True,
+            "scored_points": scored_points,
+            "total_points": description.total_points,
+            "success": success,
         })
     #Not POST
     else:

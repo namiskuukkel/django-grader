@@ -87,10 +87,10 @@ def build_docker(type, folder):
         #Wait for the previous image to be removed before continuing
         p.communicate()
         
-	out = open('/var/log/grader/docker_success_' + type, 'w')
+        out = open('/var/log/grader/docker_success_' + type, 'w')
         err = open('/var/log/grader/docker_error_' + type, 'w')
 
-	#TODO: tää kans tappolistalle
+        #TODO: tää kans tappolistalle
         subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
                                      stdout=out, stderr=err)
         return "ok"
@@ -120,8 +120,8 @@ def run(code_dir, image, out_file, err_file, timeout):
     if thread.is_alive():
         p.terminate()
         thread.join()
-	out.close()
-	err.close()
+        out.close()
+        err.close()
         return False
     out.close()
     err.close()
@@ -155,6 +155,7 @@ def build_lms_response(sourcedGUID, score):
           '</replaceResultRequest>' \
           '</imsx_POXBody>' \
           '</imsx_POXEnvelopeRequest>', 1337, sourcedGUID, score
+
 
 def is_empty(file):
     stream = open(file, 'r')
