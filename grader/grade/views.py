@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from .forms import EditorForm
+from .forms import EditorForm, DoubleEditorForm
 from course_management.models import Assignment, Course, UserAttempts
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -9,6 +9,7 @@ from datetime import datetime
 from .utils import *
 from .test_tools import *
 from .models import *
+from grader.decorators import session_data
 from docker_settings import *
 import sys
 import imp
@@ -17,14 +18,10 @@ logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 template = "An exception of type {0} occured. Arguments:\n{1!r}"
 
 @login_required
+@session_data
 def code(request):
     message = ""
     error_message = ""
-
-    if not 'outcome' in request.session or not 'course_name' in request.session \
-            or not 'assignment_name' in request.session:
-        #This error message should be as it is, as the site can't load properly without these parameters
-        return HttpResponse("Missing parameters")
 
     # Fetch the object matching the assignment name given by the LTI
     assignment_name = request.session['assignment_name']
@@ -54,9 +51,17 @@ def code(request):
             to_add.save()
 
     if request.method == 'POST':
-        form = EditorForm(request.POST)
+        if not assignment.parameter_injection:
+            form = EditorForm(request.POST)
+        else:
+            form = DoubleEditorForm(request.POST)
+
         if form.is_valid():
-            save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+            if not assignment.parameter_injection:
+                save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
+            else:
+                save_code(course_name, assignment_name, request.user.username, form.cleaned_data['parameters'] +
+                          form.cleaned_data['text'])
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
             # '-m', '50m', 'student_test', 'to_test.py', 'test']
@@ -107,7 +112,11 @@ def code(request):
             logging.error("Form validation error")
     #First time: No POST requests here
     else:
-        form = EditorForm()
+        if not assignment.parameter_injection:
+            form = EditorForm()
+        else:
+            form = DoubleEditorForm()
+
         #Attempt to find student's code from previous visit
         #TODO: Test this!
         code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name.replace(" ","_") +\
@@ -130,6 +139,7 @@ def code(request):
 
 
 @login_required
+@session_data
 def grade(request):
     if request.method == 'POST':
         form = EditorForm(request.POST)
@@ -200,7 +210,8 @@ def grade(request):
 
                 if test.type == "compare_output":
                     test_result = diff_test(test, code_dir, test_dir, result)
-                    logging.debug(', '.join([' : '.join((k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
+                    logging.debug(', '.join([' : '.join(
+                        (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
 
                     #There was an error on test execution, student will not lose attempts
                     if test_result['passed'] == "error":
@@ -259,9 +270,9 @@ def grade(request):
             "error": error_message,
             "attempts_left": attempts_left,
             "results": results,
-        "scored_points": scored_points,
-        "total_points": description.total_points,
-        "success": True,
+            "scored_points": scored_points,
+            "total_points": description.total_points,
+            "success": True,
         })
     #Not POST
     else:

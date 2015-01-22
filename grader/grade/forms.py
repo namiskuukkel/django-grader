@@ -15,9 +15,20 @@ class EditorForm(forms.Form):
                 raise forms.ValidationError("Bannattu!")
         return value
 
-class AvatarProfileForm(EditorForm):
 
-    profile_avatar = forms.ImageField()
+class DoubleEditorForm(EditorForm):
 
-    class Meta(ProfileForm.Meta):
-        fields = ProfileForm.Meta.fields + ['profile_avatar']
+    parameters = forms.CharField(widget=AceWidget(mode='python', theme='GitHub', width="575px", height="50px"),
+                                   label="Laita tähän kenttään muuttujat omia testiajojasi varten")
+
+    class Meta(EditorForm.Meta):
+        fields = ['parameters'] + EditorForm.Meta.fields
+
+    def clean_text(self):
+        value = self.cleaned_data["text"]
+        value2 = self.cleaned_data["parameters"]
+        forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
+        for banned in forbidden:
+            if banned in value or banned in value2:
+                raise forms.ValidationError("Bannattu!")
+        return value
