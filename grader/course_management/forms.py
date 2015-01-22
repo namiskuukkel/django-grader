@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from django.forms import ModelForm
-from .models import Assignment, Course
+from .models import Assignment, Course, Parameter
 
 class CourseForm(ModelForm):
     class Meta:
@@ -15,3 +15,8 @@ class AssignmentForm(ModelForm):
         model = Assignment
         fields = '__all__'
 
+class VariableForm(ModelForm):
+
+    class Meta:
+        model = Parameter
+        fields = '__all__'

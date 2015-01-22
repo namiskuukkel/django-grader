@@ -69,9 +69,9 @@ def add_course(request):
         form = CourseForm(request.POST)
 
         #TODO: hardcoded
-        '''r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
+        r = requests.get('https://mooc.tut.fi/login/oauth2/auth',
                                 headers={'client_id': 10000000000001 , 'response_type': 'code',
-                                         'redirect_uri': resolve(request.path_info).url_name})'''
+                                         'redirect_uri': resolve(request.path_info).url_name})
         token = "S49NA8uhdSErDKowppyGf2iNxmxply2xO4GKIhYyg0NNZtkycbMabX6VcHzwp86P"
         response = requests.get('https://mooc.tut.fi/api/v1/courses/1',
                                 headers={'Authorization': 'Bearer ' + token})
@@ -118,7 +118,8 @@ def add_assignment(request):
         if form.is_valid():
             form.save()
             assignment_name = form.cleaned_data['name'].replace(" ", "_")
-            assignment_path = Course.objects.get(name=form.cleaned_data['course']).assignment_base_dir + assignment_name
+            assignment_path = Course.objects.get(name=form.cleaned_data['course']).assignment_base_dir +\
+                              assignment_name.encode('utf-8')
             if not os.path.exists(assignment_path):
                 os.makedirs(assignment_path)
 

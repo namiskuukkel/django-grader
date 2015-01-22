@@ -16,25 +16,20 @@ body {
 }
 #directions {
 	clear: both;
-        color: green;
-        text-align: center;
+    color: green;
+    text-align: center;
 }
 
 #code {
 	float: left;
 	width: 49%;
 }
-#error {
-
-	float: right;
-	text-align: left;
-	width: 45%;
-}
 
 #result {
 	float: right;
 	text-align: left;
 	width: 45%;
+    color: white;
 }
 .error {
     color: red;
