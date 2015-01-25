@@ -134,3 +134,9 @@ def add_assignment(request):
         "form": form,
         "user": request.user,
     })
+
+def authenticate(request):
+    if request.method == 'POST':
+        return HttpResponse("Done")
+    return render(request, "course_management/authenticator.html", {
+    })
