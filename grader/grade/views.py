@@ -6,7 +6,7 @@ from course_management.models import Assignment, Course, UserAttempts
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
- import httplib2
+import httplib2
 from .utils import *
 from .test_tools import *
 from .models import *
