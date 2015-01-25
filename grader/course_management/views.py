@@ -38,6 +38,7 @@ def add_course(request):
     if not request.user.is_superuser:
         return PermissionDenied()
 
+    course = ""
     if request.method == 'POST':
         form = CourseForm(request.POST)
         if form.is_valid():
@@ -56,8 +57,15 @@ def add_course(request):
                 course.assignment_base_dir = assignment_dir
                 course.save()
             return redirect('/manage/')
-        else:
+    else:
+        course = None
+        form = CourseForm()
 
+    return render(request, "course_management/course.html", {
+        "form": form,
+        "user": request.user,
+        "course": course,
+    })
 
         # Fetch from Canvas version
 '''@login_required
