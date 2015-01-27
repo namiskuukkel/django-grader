@@ -48,6 +48,6 @@ class UserAttempts(models.Model):
 
 
 class Parameter(models.Model):
-    assignment = models.ForeignKey(Assignment, related_name='assignment')
+    assignment = models.ForeignKey(Assignment, related_name='parameter_assignment')
     parameter_name = models.TextField()
     type = models.TextField(blank=True)

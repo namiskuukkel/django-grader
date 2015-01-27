@@ -5,7 +5,7 @@ from django import forms
 from django_ace import AceWidget
 
 class EditorForm(forms.Form):
-    text = forms.CharField(widget=AceWidget(mode='python', theme='GitHub'),label="")
+    text = forms.CharField(widget=AceWidget(mode='python', theme='monokai'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]
@@ -18,11 +18,8 @@ class EditorForm(forms.Form):
 
 class DoubleEditorForm(EditorForm):
 
-    parameters = forms.CharField(widget=AceWidget(mode='python', theme='GitHub', width="575px", height="50px"),
+    parameters = forms.CharField(widget=AceWidget(mode='python', theme='monokai', width="575px", height="50px"),
                                    label="Laita tähän kenttään muuttujat omia testiajojasi varten")
-
-    class Meta(EditorForm.Meta):
-        fields = ['parameters'] + EditorForm.Meta.fields
 
     def clean_text(self):
         value = self.cleaned_data["text"]

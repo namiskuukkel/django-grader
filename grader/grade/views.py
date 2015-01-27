@@ -6,7 +6,6 @@ from course_management.models import Assignment, Course, UserAttempts
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
-import httplib2
 from .utils import *
 from .test_tools import *
 from .models import *
@@ -14,16 +13,24 @@ from grader.decorators import session_data
 from docker_settings import *
 import sys
 import imp
+import httplib2
+
 from django.forms.formsets import formset_factory
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 template = "An exception of type {0} occured. Arguments:\n{1!r}"
 
 @login_required
-@session_data
 def code(request):
+
+    if not 'outcome_url' in request.session or not 'course_name' in request.session \
+	    or not 'assignment_name' in request.session:
+        #This error message should be as it is, as the site can't load properly without these parameters
+        return HttpResponse("Missing parameters")
+    
     message = ""
     error_message = ""
+    template = "grade/editor.html"
 
     # Fetch the object matching the assignment name given by the LTI
     assignment_name = request.session['assignment_name']
@@ -36,8 +43,6 @@ def code(request):
         #This error message should be as it is, as the site can't load properly without this parameter
         return HttpResponse("No assignment found!")
 
-    if assignment.parameter_injection:
-        ParamaterFormSet = formset_factory(ColorForm, extra=0)
     attempts_left = None
     #If assignment.attempts > 0, then the number of attempts is limited
     if assignment.attempts > 0:
@@ -55,10 +60,11 @@ def code(request):
             to_add.save()
 
     if request.method == 'POST':
-        if not assignment.parameter_injection:
+        if assignment.parameter_injection == False:
             form = EditorForm(request.POST)
         else:
             form = DoubleEditorForm(request.POST)
+	    template = "grade/editor_parameter_inject.html"
 
         if form.is_valid():
             if not assignment.parameter_injection:
@@ -83,7 +89,7 @@ def code(request):
                 build_out = open('/var/log/grader/docker_success_student', 'w')
                 build_err = open('/var/log/grader/docker_error_student', 'w')
 
-                #TODO: tää kans tappolistalle
+                #TODO: taa kans tappolistalle
                 p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
                                      stdout=build_out, stderr=build_err)
                 p.communicate()
@@ -123,13 +129,13 @@ def code(request):
 
         #Attempt to find student's code from previous visit
         #TODO: Test this!
-        code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name.replace(" ","_") +\
+        code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name.replace(" ","_").encode("ascii", "ignore") +\
                     '/' + request.user.username + '/student_code.py'
         logging.debug("Old code loc " + code_file)
         if os.path.isfile(code_file):
             form.text = read_by_line(code_file)
 
-    return render(request, "grade/editor.html",
+    return render(request, template,
                   {
                     "form": form,
                     "user": request.user,
@@ -143,8 +149,12 @@ def code(request):
 
 
 @login_required
-@session_data
 def grade(request):
+    
+    if not 'outcome' in request.session or not 'course_name' in request.session \
+            or not 'assignment_name' in request.session:
+        #This error message should be as it is, as the site can't load properly without these parameters
+        return HttpResponse("Missing parameters")
     if request.method == 'POST':
         form = EditorForm(request.POST)
         message = ""
@@ -184,11 +194,11 @@ def grade(request):
             #Save on valid form submission
             save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
-            code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + '/'\
+            code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_").encode("ascii", "ignore") + '/'\
                        + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
             test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
-               + request.session['assignment_name'].replace(" ","_") + '/'
+               + request.session['assignment_name'].replace(" ","_").encode("ascii", "ignore") + '/'
             logging.debug("Test_dir " + test_dir)
             #subprocess.call(["cp", test_dir + "/*", code_dir])
             subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
@@ -217,7 +227,7 @@ def grade(request):
                     test_result = diff_test(test, code_dir, test_dir, result)
                     logging.debug(', '.join([' : '.join(
                         (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
-                        result.feedback = test.test_results[0]
+                    result.feedback = test.test_results[0]
 
                 #There was an error on test execution, student will not lose attempts
                 if test_result['passed'] == "error":

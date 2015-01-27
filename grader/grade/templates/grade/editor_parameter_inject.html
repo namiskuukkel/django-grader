@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link href='http://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
     <style>
       body {
         font-family: 'Cutive Mono', serif;
@@ -45,7 +45,7 @@
                 {% endif %}
             </div>
         </div>
-	
+	{% endif %}
 		<div id="play-area">
 		        <div id="result">
                     <!--There shouldn't be an error and a message at the same time but just in case of faults... -->
@@ -66,7 +66,7 @@
 			        {{ form.as_p }}
 			        </form>
 			        <button type="button" onclick="run()">Aja</button>
-			        {% if attempts_left && attempts_left == 0 %}
+			        {% if attempts_left and attempts_left == 0 %}
 			            <button type="button" disabled onclick="grade()">Testaa arvostelijalla</button>
 			            <p class="error">Olet käyttänyt kaikki yrityskertasi! </p>
 			        {% else %}
