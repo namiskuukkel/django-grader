@@ -22,7 +22,7 @@ template = "An exception of type {0} occured. Arguments:\n{1!r}"
 
 @login_required
 def code(request):
-
+    #TODO: Can this be moved to a decorator?
     if not 'outcome_url' in request.session or not 'course_name' in request.session \
 	    or not 'assignment_name' in request.session:
         #This error message should be as it is, as the site can't load properly without these parameters
@@ -64,7 +64,7 @@ def code(request):
             form = EditorForm(request.POST)
         else:
             form = DoubleEditorForm(request.POST)
-	    template = "grade/editor_parameter_inject.html"
+            template = "grade/editor_parameter_inject.html"
 
         if form.is_valid():
             if not assignment.parameter_injection:
@@ -80,7 +80,7 @@ def code(request):
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
-                #Dockerfile has to be in the same directory where student code is or student code won't be found!
+                # Dockerfile has to be in the same directory where student code is or student code won't be found!
                 subprocess.call(["cp", student_docker + "Dockerfile", code_dir])
             except Exception as e:
                 logging.error( template.format(type(e).__name__, e.args))
@@ -89,12 +89,13 @@ def code(request):
                 build_out = open('/var/log/grader/docker_success_student', 'w')
                 build_err = open('/var/log/grader/docker_error_student', 'w')
 
-                #TODO: taa kans tappolistalle
+                # TODO: taa kans tappolistalle
                 p = subprocess.Popen(['sudo', 'docker', 'build', '-t', 'student_image', code_dir],
                                      stdout=build_out, stderr=build_err)
                 p.communicate()
             except:
-                logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+                logging.error('Koodin ajoympäristöä ei voitu käynnistää.'
+                              'Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan')
                 if build_out not in locals()or build_err not in locals():
                     build_out.close()
                     build_err.close()
@@ -102,24 +103,24 @@ def code(request):
             build_out.close()
             build_err.close()
 
-            out_file = code_dir + "result.txt"
-            err_file  = code_dir + "error.txt"
-            #Run student code in Docker: Returns True if running succeeded and False if running took too long
-            if run(code_dir, "student_image", out_file, err_file, timeout):
-                #Should have something in either of these
+            out_file = code_dir + 'result.txt'
+            err_file  = code_dir + 'error.txt'
+            # Run student code in Docker: Returns True if running succeeded and False if running took too long
+            if run(code_dir, 'student_image', out_file, err_file, timeout):
+                # Should have something in either of these
                 if not is_empty(out_file):
                     message = read_by_line(out_file)
                 else:
                     if not is_empty(err_file):
                         error_message = read_by_line(err_file)
                     else:
-                        logging.error("Both stdout and stderr files were empty")
+                        logging.error('Both stdout and stderr files were empty')
                         return redirect('error')
             else:
                 #TODO: Test this!
-                error_message = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
+                error_message = 'Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin.'
         else:
-            logging.error("Form validation error")
+            logging.error('Form validation error')
     #First time: No POST requests here
     else:
         if not assignment.parameter_injection:
@@ -150,11 +151,12 @@ def code(request):
 
 @login_required
 def grade(request):
-    
+    #TODO: Can this be moved to a decorator?
     if not 'outcome' in request.session or not 'course_name' in request.session \
             or not 'assignment_name' in request.session:
         #This error message should be as it is, as the site can't load properly without these parameters
         return HttpResponse("Missing parameters")
+
     if request.method == 'POST':
         form = EditorForm(request.POST)
         message = ""
@@ -163,7 +165,7 @@ def grade(request):
         course_name = request.session['course_name']
 
         try:
-            assignment = Assignment.objects.get(name=assignment_name, course__name=request.session['course_name'])
+            assignment = Assignment.objects.get(name=assignment_name, course__name=course_name)
         except Exception as e:
             logging.error(template.format(type(e).__name__, e.args))
             return redirect('error')

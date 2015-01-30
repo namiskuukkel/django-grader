@@ -16,10 +16,11 @@ class EditorForm(forms.Form):
         return value
 
 
-class DoubleEditorForm(EditorForm):
+class DoubleEditorForm(forms.Form):
 
-    parameters = forms.CharField(widget=AceWidget(mode='python', theme='monokai', width="575px", height="50px"),
+    parameters = forms.CharField(widget=AceWidget(mode='python', theme='github', width="575px", height="50px"),
                                    label="Laita tähän kenttään muuttujat omia testiajojasi varten")
+    text = forms.CharField(widget=AceWidget(mode='python', theme='github'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]
