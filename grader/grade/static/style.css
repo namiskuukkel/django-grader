@@ -1,5 +1,5 @@
 body {
-	background-color: black;
+	background-color: white;
 	font-family: 'Cutive Mono', ;
 }
 #content {
@@ -11,25 +11,29 @@ body {
 }
 #header {
 	clear: both;
+	height: 50px;
+	background-color:#4b5662;
 	color: green;
 	text-align: center;
 }
 #directions {
+	background-color: grey;
 	clear: both;
-    color: green;
-    text-align: center;
+    	color: green;
+    	text-align: center;
 }
 
 #code {
 	float: left;
 	width: 49%;
+	padding-left: 20px;
 }
 
 #result {
 	float: right;
 	text-align: left;
 	width: 45%;
-    color: white;
+    	color: black;
 }
 .error {
     color: red;

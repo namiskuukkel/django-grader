@@ -18,9 +18,9 @@ class EditorForm(forms.Form):
 
 class DoubleEditorForm(forms.Form):
 
-    parameters = forms.CharField(widget=AceWidget(mode='python', theme='github', width="575px", height="50px"),
+    parameters = forms.CharField(widget=AceWidget(mode='python', theme='merbivore', width="575px", height="50px"),
                                    label="Laita tähän kenttään muuttujat omia testiajojasi varten")
-    text = forms.CharField(widget=AceWidget(mode='python', theme='github'),label="")
+    text = forms.CharField(widget=AceWidget(mode='python', theme='merbivore'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]

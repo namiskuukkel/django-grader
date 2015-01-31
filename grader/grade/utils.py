@@ -14,7 +14,7 @@ def save_code(course_name, assignment_name, username, code):
         course = Course.objects.get(name=course_name)
         if course.use_gitlab is False:
 
-            student_dir = course.student_code_dir + assignment_name.replace(" ", "_") + '/' + username
+            student_dir = course.student_code_dir + assignment_name.replace(" ", "_").encode("ascii", "ignore") + '/' + username
             #Note the character constraints on directory and file names!
             #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
             logging.info("attempt:" + student_dir)

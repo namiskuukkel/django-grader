@@ -71,12 +71,12 @@ def code(request):
                 save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
             else:
                 save_code(course_name, assignment_name, request.user.username, form.cleaned_data['parameters'] +
-                          form.cleaned_data['text'])
+                          '\n' + form.cleaned_data['text'])
             #docker run -v <volume: folder shared with docker container> --net='none' <no networking> -m <amount of memory to use> --rm='true'
             #-m not working on Ubuntu: p = subprocess.Popen(['docker', 'run', '--volume', '/root:/test', '--net', 'none', '--rm',
             # '-m', '50m', 'student_test', 'to_test.py', 'test']
             try:
-                code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_") + \
+                code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_").encode("ascii", "ignore") + \
                            '/' + request.user.username + '/'
                 logging.info(code_dir)
                 timeout = Assignment.objects.get(name=assignment_name, course__name=course_name).execution_timeout
@@ -96,7 +96,7 @@ def code(request):
             except:
                 logging.error('Koodin ajoympäristöä ei voitu käynnistää.'
                               'Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan')
-                if build_out not in locals()or build_err not in locals():
+                if build_out not in locals() or build_err not in locals():
                     build_out.close()
                     build_err.close()
                 return redirect('error')
@@ -130,7 +130,7 @@ def code(request):
 
         #Attempt to find student's code from previous visit
         #TODO: Test this!
-        code_file = Course.objects.get(name=course_name).student_code_dir + '/' + assignment_name.replace(" ","_").encode("ascii", "ignore") +\
+        code_file = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_").encode("ascii", "ignore") +\
                     '/' + request.user.username + '/student_code.py'
         logging.debug("Old code loc " + code_file)
         if os.path.isfile(code_file):
@@ -230,7 +230,8 @@ def grade(request):
                     logging.debug(', '.join([' : '.join(
                         (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
                     result.feedback = test.test_results[0]
-
+                elif test.type == "parameter_injection":
+		    test_result = inject_diff_test(test, code_dir, test_dir, result)
                 #There was an error on test execution, student will not lose attempts
                 if test_result['passed'] == "error":
                     logging.error(test_result['message'])

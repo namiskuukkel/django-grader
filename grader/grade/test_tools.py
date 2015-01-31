@@ -130,3 +130,7 @@ def diff_test(test, code_dir, test_dir, result):
     else:
         return {"passed": "yes",
                 "message": "unequal"}
+
+
+def diff_test(test, code_dir, test_dir, result):
+    print("stuff")
