@@ -196,7 +196,8 @@ def grade(request):
             #Save on valid form submission
             save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
 
-            code_dir = Course.objects.get(name=course_name).student_code_dir + assignment_name.replace(" ","_").encode("ascii", "ignore") + '/'\
+            code_dir = Course.objects.get(name=course_name).student_code_dir +\
+                       assignment_name.replace(" ","_").encode("ascii", "ignore") + '/'\
                        + request.user.username + '/'
             # Copy test files from assignment directory to the shared volume
             test_dir = Course.objects.get(name=request.session['course_name']).assignment_base_dir\
@@ -231,7 +232,10 @@ def grade(request):
                         (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
                     result.feedback = test.test_results[0]
                 elif test.type == "parameter_injection":
-		    test_result = inject_diff_test(test, code_dir, test_dir, result)
+                    test_result = inject_diff_test(test, code_dir, test_dir, result)
+                    logging.debug(', '.join([' : '.join(
+                        (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
+                    result.feedback = test.test_results[0]
                 #There was an error on test execution, student will not lose attempts
                 if test_result['passed'] == "error":
                     logging.error(test_result['message'])

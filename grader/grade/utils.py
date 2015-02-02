@@ -98,7 +98,7 @@ def build_docker(type, folder):
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
 
-def run(code_dir, image, out_file, err_file, timeout):
+def run(code_file, image, out_file, err_file, timeout):
     p = None
     out = open(out_file, 'w')
     err = open(err_file, 'w')
@@ -108,7 +108,7 @@ def run(code_dir, image, out_file, err_file, timeout):
         #--net, networking: Networking settings for Docker container; none for no networking
         #--rm, remove: Automatically remove container after it finishes
         #image: The image which the container is built on
-        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir + ':/test' ,'-w', '/test',
+        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_file + ':/test/code.py' ,'-w', '/test',
                               '--net', 'none', '--rm', image], stdout=out, stderr=err)
 
         #Wait for process to terminate

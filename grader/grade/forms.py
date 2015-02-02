@@ -12,7 +12,7 @@ class EditorForm(forms.Form):
         forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
         for banned in forbidden:
             if banned in value:
-                raise forms.ValidationError("Bannattu!")
+                raise forms.ValidationError("Yritit käyttää estettyä python käskyä")
         return value
 
 
@@ -28,5 +28,5 @@ class DoubleEditorForm(forms.Form):
         forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
         for banned in forbidden:
             if banned in value or banned in value2:
-                raise forms.ValidationError("Bannattu!")
+                raise forms.ValidationError("Yritit käyttää estettyä python käskyä")
         return value
