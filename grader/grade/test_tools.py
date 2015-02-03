@@ -112,7 +112,25 @@ def diff_test(test, code_dir, test_dir, result):
 
 def inject_diff_test(test, code_dir, test_dir, result):
     ################### STUDENT PART ##########################
-    success = build_docker('student_image', code_dir)
+    ###########################################################
+
+    modified_student_dir = code_dir + test.name.replace(" ", "_") + '/'
+    if not os.path.exists(modified_student_dir):
+        os.makedirs(modified_student_dir)
+
+    modified_code_student = modified_student_dir + 'student_code.py'
+    #Add some preset parameters in the beginning of the file that is run in docker
+    modified = open(modified_code_student, 'w')
+    for parameter in test.parameters:
+        modified.write(parameter + '\n')
+    code = read_by_line(code_dir+'/student_code.py')
+    modified += code
+    modified.close()
+
+    #Have to copy this in the new directory
+    subprocess.call(["cp", student_docker + "Dockerfile", modified_student_dir])
+
+    success = build_docker('student_image', modified_student_dir)
     if success != "ok":
         logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
         return {"pass": "error",
@@ -127,17 +145,8 @@ def inject_diff_test(test, code_dir, test_dir, result):
     if os.path.isfile(out_file):
         os.remove(err_file)
 
-    modified_code_student = code_dir + test.name.replace(" ", "_") + 'modified_student_code.py'
-    #Add some preset parameters in the beginning of the file that is run in docker
-    modified = open(modified_code_student, 'w')
-    for parameter in test.parameters:
-        modified.write(parameter + '\n')
-    code = read_by_line(code_dir+'/student_code.py')
-    modified += code
-    modified.close()
-
     try:
-        if run(modified_code_student, "student_image", out_file, err_file, test.timeout):
+        if run(modified_student_dir, "student_image", out_file, err_file, test.timeout):
             #Should have something in either of these
             if not is_empty(out_file):
                 result.student_result = read_by_line(out_file)
@@ -165,6 +174,8 @@ def inject_diff_test(test, code_dir, test_dir, result):
                 "message": "Error running docker"}
 
     ###########################EXAMPLE PART##########################
+    #################################################################
+
     needs_running = True
     try:
         example_age = os.path.getmtime(test_dir + "/example.py")
@@ -184,14 +195,8 @@ def inject_diff_test(test, code_dir, test_dir, result):
         pass
 
     if needs_running:
-        success = build_docker('example_image', test_dir)
-        if success != "ok":
-            return {"passed": "error",
-                    "message": "Error building example docker."}
-
-        error_file = test_dir + test.name.replace(" ", "_") + '_unexpected_error'
-
-        modified_code_example = test_dir + test.name.replace(" ", "_") + 'modified_example_code.py'
+        modified_example_dir = test_dir + test.name.replace(" ", "_") + '/'
+        modified_code_example = modified_example_dir + 'modified_example_code.py'
         #Add some preset parameters in the beginning of the file that is run in docker
         modified = open(modified_code_example, 'w')
         for parameter in test.parameters:
@@ -200,9 +205,18 @@ def inject_diff_test(test, code_dir, test_dir, result):
         modified += code
         modified.close()
 
+        #Have to copy this in the new directory
+        subprocess.call(["cp", example_docker + "Dockerfile", modified_example_dir])
+        success = build_docker('example_image', modified_example_dir)
+        if success != "ok":
+            return {"passed": "error",
+                    "message": "Error building example docker."}
+
+        error_file = test_dir + test.name.replace(" ", "_") + '_unexpected_error'
+
         try:
             logging.debug("Test_dir " + test_dir)
-            if run(modified_code_example, "example_image", expected_file, error_file, test.timeout):
+            if run(modified_example_dir, "example_image", expected_file, error_file, test.timeout):
                 #Should have something in either of these
                 if is_empty(expected_file):
                     logging.debug("expected empty")
