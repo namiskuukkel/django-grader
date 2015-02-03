@@ -24,7 +24,7 @@ def diff_test(test, code_dir, test_dir, result):
         os.remove(out_file)
     if os.path.isfile(out_file):
         os.remove(err_file)
-
+    logging.debug('Code_dir: ' + code_dir+'/student_code.py')
     try:
         if run(code_dir+'/student_code.py', "student_image", out_file, err_file, test.timeout):
             #Should have something in either of these

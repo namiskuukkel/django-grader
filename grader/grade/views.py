@@ -152,7 +152,7 @@ def code(request):
 @login_required
 def grade(request):
     #TODO: Can this be moved to a decorator?
-    if not 'outcome' in request.session or not 'course_name' in request.session \
+    if not 'outcome_url' in request.session or not 'course_name' in request.session \
             or not 'assignment_name' in request.session:
         #This error message should be as it is, as the site can't load properly without these parameters
         return HttpResponse("Missing parameters")
