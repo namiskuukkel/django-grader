@@ -17,7 +17,6 @@ def save_code(course_name, assignment_name, username, code):
             student_dir = course.student_code_dir + assignment_name.replace(" ", "_").encode("ascii", "ignore") + '/' + username
             #Note the character constraints on directory and file names!
             #student_dir = course.student_code_dir + '\\' + assignment_name + '\\' + username
-            logging.info("attempt:" + student_dir)
             #Create student directory if one doesn't exist already
             if not os.path.exists(student_dir):
                 try:
@@ -30,6 +29,8 @@ def save_code(course_name, assignment_name, username, code):
             #Write student code to file
             with open(student_dir + "/student_code.py", 'w') as f:
                 file = File(f)
+		file.write('#!/usr/bin/python\n')
+		file.write('# -*- coding: UTF-8 -*-\n')
                 file.write(code)
 
             return "ok"
@@ -98,7 +99,7 @@ def build_docker(type, folder):
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
 
 
-def run(code_file, image, out_file, err_file, timeout):
+def run(code_dir, image, out_file, err_file, timeout):
     p = None
     out = open(out_file, 'w')
     err = open(err_file, 'w')
@@ -108,8 +109,9 @@ def run(code_file, image, out_file, err_file, timeout):
         #--net, networking: Networking settings for Docker container; none for no networking
         #--rm, remove: Automatically remove container after it finishes
         #image: The image which the container is built on
-        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_file + ':/test/code.py' ,'-w', '/test',
-                              '--net', 'none', '--rm', image], stdout=out, stderr=err)
+	logging.debug("code_file " + code_dir)
+        p = subprocess.Popen(['sudo', 'docker', 'run', '--volume', code_dir + ':/test/', '--net', 'none',
+                              '--rm', image], stdout=out, stderr=err)
 
         #Wait for process to terminate
         p.communicate()
@@ -173,6 +175,5 @@ def read_by_line(file):
     output = open(file, 'r')
     for line in output:
         message += line + '\n'
-        logging.debug("out:"+message)
     output.close()
     return message
