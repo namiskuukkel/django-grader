@@ -10,9 +10,9 @@ logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)
 
 def diff_test(test, code_dir, test_dir, result):
     ################### STUDENT PART ##########################
-    success = build_docker('student_image', code_dir)
+    success = build_docker('student', code_dir)
     if success != "ok":
-        logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
+        logging.error(success)
         return {"pass": "error",
                 "message": "Error building student docker."}
 
@@ -73,7 +73,7 @@ def diff_test(test, code_dir, test_dir, result):
         pass
 
     if needs_running:
-        success = build_docker('example_image', test_dir)
+        success = build_docker('example', test_dir)
         if success != "ok":
             return {"passed": "error",
                     "message": "Error building example docker."}
@@ -121,19 +121,23 @@ def inject_diff_test(test, code_dir, test_dir, result):
     modified_code_student = modified_student_dir + 'student_code.py'
     #Add some preset parameters in the beginning of the file that is run in docker
     modified = open(modified_code_student, 'w')
+    code = open(code_dir+'/student_code.py', 'r')
+    #Read the utf-8 definition from the beginning of the file
+    modified.write(code.readline())
+    modified.write(code.readline())
+
     for parameter in test.parameters:
         modified.write(parameter + '\n')
-    code = read_by_line(code_dir+'/student_code.py')
-    modified += code
+    modified.write(code.read())
     modified.close()
 
     #Have to copy this in the new directory
     subprocess.call(["cp", student_docker + "Dockerfile", modified_student_dir])
-
-    success = build_docker('student_image', modified_student_dir)
+    success = build_docker('student', modified_student_dir)
+    logging.debug("Tassa " + success)    
     if success != "ok":
-        logging.error("Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan")
-        return {"pass": "error",
+        logging.error(success)
+        return {"passed": "error",
                 "message": "Error building student docker."}
 
     out_file = code_dir + test.name.replace(" ", "_") + '_student_result.txt'
@@ -199,15 +203,19 @@ def inject_diff_test(test, code_dir, test_dir, result):
         modified_code_example = modified_example_dir + 'modified_example_code.py'
         #Add some preset parameters in the beginning of the file that is run in docker
         modified = open(modified_code_example, 'w')
+        code = open(code_dir+'/student_code.py', 'r')
+        #Read the utf-8 definition from the beginning of the file
+        modified.write(code.readline())
+        modified.write(code.readline())
+
         for parameter in test.parameters:
             modified.write(parameter + '\n')
-        code = read_by_line(test_dir + "/example.py")
-        modified += code
+        modified.write(code.read())
         modified.close()
 
         #Have to copy this in the new directory
         subprocess.call(["cp", example_docker + "Dockerfile", modified_example_dir])
-        success = build_docker('example_image', modified_example_dir)
+        success = build_docker('example', modified_example_dir)
         if success != "ok":
             return {"passed": "error",
                     "message": "Error building example docker."}

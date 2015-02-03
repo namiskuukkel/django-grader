@@ -82,18 +82,19 @@ def build_docker(type, folder):
     else:
         return "Unknown docker type"
 
+    #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
+    p = subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
+    #Wait for the previous image to be removed before continuing
+    p.communicate()
+    
+    out = open('/var/log/grader/docker_success_' + type, 'w')
+    err = open('/var/log/grader/docker_error_' + type, 'w')
     try:
-        #Forcibly remove a previous image to avoid any old tests or student codes of messing things up
-        p = subprocess.Popen(['sudo', 'docker', 'rmi', '-f', image])
-        #Wait for the previous image to be removed before continuing
-        p.communicate()
-        
-        out = open('/var/log/grader/docker_success_' + type, 'w')
-        err = open('/var/log/grader/docker_error_' + type, 'w')
-
         #TODO: tää kans tappolistalle
         subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
                                      stdout=out, stderr=err)
+        out.close()
+        err.close()
         return "ok"
     except:
         return "Koodin ajoympäristöä ei voitu käynnistää. Jos virhe toistuu, ota yhteyttä kurssihenkilökuntaan"
