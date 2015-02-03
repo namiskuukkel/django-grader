@@ -286,7 +286,8 @@ def grade(request):
         http = httplib2.Http()
         headers = {'Content-type': 'application/xml'}
         response, content = http.request(request.session['outcome_url'], 'POST', headers=headers)
-
+        logging.debug(response)
+        logging.debug(content)
         return render(request, "grade/results.html",
         {
             "assignment_name": assignment_name,

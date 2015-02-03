@@ -29,7 +29,7 @@
     <h3>{{result.test_name}}</h3>
     <p>{{result.description}}</p>
     <p>Oma koodisi tuotti:</p>
-    <textarea>{{result.student_result}}</textarea>
+    {{result.student_result|linebreaks}}
     <p>{{result.feedback}}</p>
     {% endfor %}
 

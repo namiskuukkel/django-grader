@@ -52,10 +52,10 @@
 		        <div id="result">
                     <!--There shouldn't be an error and a message at the same time but just in case of faults... -->
                     {% if error != "" %}
-		                <p class="error">{{error|linebreaks}}</p>
+		                <pre class="error">{{error|linebreaks}}</pre>
                     {% endif %}
                     {% if message != "" %}
-		                <p>{{message|linebreaks}}</p>
+		                <pre>{{message|linebreaks}}</pre>
                     {% endif %}
 		        </div>
 	
