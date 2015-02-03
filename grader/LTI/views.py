@@ -88,8 +88,7 @@ def launch_lti(request):
     request.session['assignment_name'] = assignment
     request.session['lms_context'] = lms_context
     request.session['outcome_url'] = outcome_url
-    request.session['return_url'] = request.META.HTTP_REFERER
-
+    request.session['return_url'] = request.META['HTTP_REFERER']
     return HttpResponseRedirect('/grader/code/')
     
 def login_info(request):

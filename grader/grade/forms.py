@@ -5,24 +5,22 @@ from django import forms
 from django_ace import AceWidget
 
 class EditorForm(forms.Form):
-    text = forms.CharField(widget=AceWidget(mode='python', theme='GitHub'),label="")
+    text = forms.CharField(widget=AceWidget(mode='python', theme='monokai'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]
         forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
         for banned in forbidden:
             if banned in value:
-                raise forms.ValidationError("Bannattu!")
+                raise forms.ValidationError("Yritit käyttää estettyä python käskyä")
         return value
 
 
-class DoubleEditorForm(EditorForm):
+class DoubleEditorForm(forms.Form):
 
-    parameters = forms.CharField(widget=AceWidget(mode='python', theme='GitHub', width="575px", height="50px"),
+    parameters = forms.CharField(widget=AceWidget(mode='python', theme='merbivore', width="575px", height="50px"),
                                    label="Laita tähän kenttään muuttujat omia testiajojasi varten")
-
-    class Meta(EditorForm.Meta):
-        fields = ['parameters'] + EditorForm.Meta.fields
+    text = forms.CharField(widget=AceWidget(mode='python', theme='merbivore'),label="")
 
     def clean_text(self):
         value = self.cleaned_data["text"]
@@ -30,5 +28,5 @@ class DoubleEditorForm(EditorForm):
         forbidden = ['exec(', 'eval(', 'exit(', 'quit(']
         for banned in forbidden:
             if banned in value or banned in value2:
-                raise forms.ValidationError("Bannattu!")
+                raise forms.ValidationError("Yritit käyttää estettyä python käskyä")
         return value

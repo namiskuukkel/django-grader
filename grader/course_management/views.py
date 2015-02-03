@@ -43,6 +43,7 @@ def add_course(request):
         form = CourseForm(request.POST)
         if form.is_valid():
             form = CourseForm(request.POST)
+            form.save() 
             # Check if there is an ending slash on the student code directory name
             # If not, add one and save that to database
             course = Course.objects.get(name=request.session['course_name'])
@@ -124,14 +125,13 @@ def add_assignment(request):
         form = AssignmentForm(request.POST)
         parameters = ""
         if form.is_valid():
-            form.save()
-            assignment_name = form.cleaned_data['name'].replace(" ", "_")
-            assignment_path = Course.objects.get(name=form.cleaned_data['course']).assignment_base_dir +\
-                              assignment_name.encode('utf-8')
+            assignment_name = form.cleaned_data['name'].replace(" ", "_").encode("ascii", "ignore")
+            assignment_path = Course.objects.get(name=form.cleaned_data['course']).assignment_base_dir + assignment_name
             if not os.path.exists(assignment_path):
                 os.makedirs(assignment_path)
 
-            return redirect('/manage')
+            form.save()
+            return redirect('/manage/')
         else:
             return HttpResponse("Örrr")
 

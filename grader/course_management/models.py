@@ -45,9 +45,3 @@ class UserAttempts(models.Model):
     user = models.ForeignKey(User, related_name='user')
     assignment = models.ForeignKey(Assignment, related_name='assignment')
     attempts = models.SmallIntegerField()
-
-
-class Parameter(models.Model):
-    assignment = models.ForeignKey(Assignment, related_name='assignment')
-    parameter_name = models.TextField()
-    type = models.TextField(blank=True)
