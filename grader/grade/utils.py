@@ -91,8 +91,9 @@ def build_docker(type, folder):
     err = open('/var/log/grader/docker_error_' + type, 'w')
     try:
         #TODO: tää kans tappolistalle
-        subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
-                                     stdout=out, stderr=err)
+        r = subprocess.Popen(['sudo', 'docker', 'build', '-t', image, folder],
+                              stdout=out, stderr=err)
+        r.communicate()
         out.close()
         err.close()
         return "ok"

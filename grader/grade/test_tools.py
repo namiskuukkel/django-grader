@@ -134,7 +134,7 @@ def inject_diff_test(test, code_dir, test_dir, result):
     #Have to copy this in the new directory
     subprocess.call(["cp", student_docker + "Dockerfile", modified_student_dir])
     success = build_docker('student', modified_student_dir)
-    logging.debug("Tassa " + success)    
+
     if success != "ok":
         logging.error(success)
         return {"passed": "error",
@@ -164,7 +164,7 @@ def inject_diff_test(test, code_dir, test_dir, result):
                             "message": "error"}
                 else:
                     return {"passed": "error",
-                            "message": "Docker wrote no results!"}
+                            "message": "Student Docker wrote no results!"}
         else:
             result.student_result = "Keskeytetty"
             result.feedback = "Koodin ajamisessa kesti liian kauan. Ajo keskeytettiin."
@@ -188,6 +188,7 @@ def inject_diff_test(test, code_dir, test_dir, result):
                 "message": "Example.py not found"}
 
     expected_file = test_dir + test.name.replace(" ", "_") + "_expected_output"
+    logging.debug("Expected " + expected_file)
     try:
         example_result_age = os.path.getmtime(expected_file)
         #If example.py is a newer file than expected output file for this test, the test needs to be run with the new
@@ -200,10 +201,14 @@ def inject_diff_test(test, code_dir, test_dir, result):
 
     if needs_running:
         modified_example_dir = test_dir + test.name.replace(" ", "_") + '/'
-        modified_code_example = modified_example_dir + 'modified_example_code.py'
+	logging.debug(modified_example_dir)
+        if not os.path.exists(modified_example_dir):
+            os.makedirs(modified_example_dir)
+
+	modified_code_example = modified_example_dir + 'example.py'
         #Add some preset parameters in the beginning of the file that is run in docker
         modified = open(modified_code_example, 'w')
-        code = open(code_dir+'/student_code.py', 'r')
+        code = open(test_dir+'/example.py', 'r')
         #Read the utf-8 definition from the beginning of the file
         modified.write(code.readline())
         modified.write(code.readline())
@@ -230,7 +235,7 @@ def inject_diff_test(test, code_dir, test_dir, result):
                     logging.debug("expected empty")
                     if is_empty(error_file):
                         return {"passed": "error",
-                                "message": "Docker wrote no results!"}
+                                "message": "Example Docker wrote no results!"}
                     else:
                         logging.error("Example produced: " + read_by_line(error_file))
                         return {"passed": "error",
