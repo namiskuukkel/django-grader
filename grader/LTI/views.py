@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
+# Modified from hdn8/django-uocLTI views.py
+
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
 from ims_lti_py.tool_provider import DjangoToolProvider
