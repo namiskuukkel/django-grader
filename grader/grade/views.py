@@ -60,7 +60,7 @@ def code(request):
             to_add.save()
 
     if request.method == 'POST':
-        if assignment.parameter_injection == False:
+        if assignment.variable_injection == False:
             form = EditorForm(request.POST)
         else:
             form = DoubleEditorForm(request.POST)
@@ -231,7 +231,7 @@ def grade(request):
                     logging.debug(', '.join([' : '.join(
                         (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
                     result.feedback = test.test_results[0]
-                elif test.type == "parameter_injection":
+                elif test.type == "variable_injection":
                     test_result = inject_diff_test(test, code_dir, test_dir, result)
                     logging.debug(', '.join([' : '.join(
                         (k, str(test_result[k]))) for k in sorted(test_result, key=test_result. get, reverse=True)]))
