@@ -32,7 +32,7 @@ class Assignment(models.Model):
     # 0 attempts allowed equals to infinite attempts
     attempts = models.PositiveSmallIntegerField(default=0)
     execution_timeout = models.PositiveIntegerField(default=30)
-    parameter_injection = models.BooleanField(default=False)
+    variable_injection = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (("name", "course"),)
