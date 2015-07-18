@@ -67,7 +67,7 @@ def code(request):
             template = "grade/editor_parameter_inject.html"
 
         if form.is_valid():
-            if not assignment.parameter_injection:
+            if not assignment.variable_injection:
                 save_code(course_name, assignment_name, request.user.username, form.cleaned_data['text'])
             else:
                 save_code(course_name, assignment_name, request.user.username, form.cleaned_data['parameters'] +
@@ -123,7 +123,7 @@ def code(request):
             logging.error('Form validation error')
     #First time: No POST requests here
     else:
-        if not assignment.parameter_injection:
+        if not assignment.variable_injection:
             form = EditorForm()
         else:
             form = DoubleEditorForm()
