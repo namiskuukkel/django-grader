@@ -13,7 +13,7 @@ import json
 from .forms import *
 import os
 import logging
-from grader.top_secret_canvas_client_settings import *
+#from grader.top_secret_canvas_client_settings import *
 from django.core.urlresolvers import resolve
 
 logging.basicConfig(filename='/var/log/grader/grader.log', level=logging.DEBUG)

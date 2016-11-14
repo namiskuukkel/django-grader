@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-from django.conf.urls import patterns, url
-import views
+from django.conf.urls import  url
+from views import grade, code, error, index
 
-urlpatterns = patterns('',
-    url(r'grade/', views.grade, name='grade'),
-    url(r'code/', views.code, name='code'),
-    url(r'error/', views.error, name='error'),
-    url(r'$', views.index, name='index'),
-)
+urlpatterns = [
+    url(r'grade/', grade, name='grade'),
+    url(r'code/', code, name='code'),
+    url(r'error/',error, name='error'),
+    url(r'$', index, name='index'),
+]
